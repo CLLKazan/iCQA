@@ -1,0 +1,145 @@
+{% extends "user.html" %}
+<!-- user_stats.html -->
+{% load i18n %}
+{% load extra_tags %}
+{% load extra_filters %}
+{% load humanize %}
+{% load question_list_tags %}
+		{% block usercontent %}
+
+        <a name="questions"></a>
+        {% spaceless %}
+            <h2>
+                {% blocktrans count questions.paginator.count as counter %}
+                <span class="count">{{counter}}</span> Question
+                {% plural %}
+                <span class="count">{{counter}}</span> Questions
+                {% endblocktrans %}
+                <a class="feed-icon" style="background-image:url('{% media "media/images/feed-icon-small.png" %}');"
+                    href="{{ view_user.get_asked_url }}?type=rss" title="{% trans "subscribe to question RSS feed" %}"></a>
+            </h2>
+        {% endspaceless %}
+        <div>{{ questions.paginator.sort_tabs }}</div>
+		<div id="listA" class="user-stats-table">
+		    {% for question in questions.paginator.page %}
+		        {% question_list_item question favorite_count=yes signature_type=badges %}
+		    {% endfor %}
+		</div>
+		<br clear="all"/>
+		<div class="pager">{{ questions.paginator.page_numbers }}</div>
+		<br clear="all"/>
+
+        <a name="answers"></a>
+        {% spaceless %}
+            <h2>
+                {% blocktrans count answers.paginator.count as counter %}
+                <span class="count">{{counter}}</span> Answer
+                {% plural %}
+                <span class="count">{{counter}}</span> Answers
+                {% endblocktrans %}
+            </h2>
+        {% endspaceless %}
+        <div>{{ answers.paginator.sort_tabs }}</div>
+        <div class="user-stats-table">
+            {% for answer in answers.paginator.page %}
+            <div class="answer-summary">
+                <a title="{{answer.question.title}}"
+                    href="{{ answer.get_absolute_url }}">
+                    <span class="{% if answer.nis.accepted %}answered-accepted {% endif %} answer-votes" 
+						title="{% blocktrans with answer.score as vote_count %}the answer has been voted for {{ vote_count }} times{% endblocktrans %} {% if answer.nis.accepted %}{% trans "this answer has been selected as correct" %}{%endif%}">
+                        {{ answer.score }}
+                    </span>
+                </a>
+                <div class="answer-link">
+                    {% spaceless %}
+                    <a href="{{ answer.get_absolute_url }}">{{answer.headline}}</a>
+                    {% endspaceless %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <br clear="all"/>
+		<div class="pager">{{ answers.paginator.page_numbers }}</div>
+        <br clear="all"/>
+        <a name="votes"></a>
+        {% spaceless %}
+            <h2>
+                {% blocktrans count total_votes as cnt %}
+                    <span class="count">{{cnt}}</span> Vote
+                {% plural %}
+                    <span class="count">{{cnt}}</span> Votes
+                {% endblocktrans %}
+            </h2>
+        {% endspaceless %}
+        <div class="user-stats-table">
+            <table>
+                <tr>
+                    <td width="60">
+                        <img style="cursor: default;" src="{% media  "/media/images/vote-arrow-up-on.png" %}" alt="{% trans "thumb up" %}" />
+                            <span title="{% trans "user has voted up this many times" %}" class="vote-count">{{up_votes}}</span>
+
+                    </td>
+                    <td width="60">
+                        <img style="cursor: default;" src="{% media  "/media/images/vote-arrow-down-on.png" %}" alt="{% trans "thumb down" %}" />
+                            <span title="{% trans "user voted down this many times" %}" class="vote-count">{{down_votes}}</span>
+
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <a name="tags"></a>
+        {% spaceless %}
+            <h2>
+                {% blocktrans count user_tags|length as counter %}
+                    <span class="count">{{counter}}</span> Tag
+                {% plural %}
+                    <span class="count">{{counter}}</span> Tags
+                {% endblocktrans %}
+            </h2>
+        {% endspaceless %}
+        <div class="user-stats-table">
+            <table class="tags">
+                <tr style="vertical-align: top;">
+                    <td valign="top" style="padding-right: 20px;">
+                        {% for tag in user_tags%}
+                        <a rel="tag" 
+                            class="tag-link-{{ tag.name }}"
+							title="{% blocktrans with tag.name as tag_name %}see other questions with {{view_user}}'s contributions tagged '{{ tag_name }}' {% endblocktrans %}"
+							href="{% url tag_questions tag|urlencode %}?user={{view_user.username}}">{{tag.name}}</a>
+                        <span class="tag-number">&#215; {{ tag.user_tag_usage_count|intcomma }}</span><br/>
+                            {% if forloop.counter|divisibleby:"10" %}
+                                </td>
+                                <td width="180"  valign="top">
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <a name="badges"></a>
+        {% spaceless %}
+        <h2>
+            {% blocktrans count total_awards as counter %}
+            <span class="count">{{counter}}</span> Badge
+            {% plural %}
+            <span class="count">{{counter}}</span> Badges
+            {% endblocktrans %}
+        </h2>
+        {% endspaceless %}
+        <div class="user-stats-table">
+            <table>
+                <tr style="vertical-align: top;">
+                    <td style="line-height:35px; padding-right: 20px;">
+                        {% for award, count in awards %}
+                            <a href="{% url badges %}{{award.id}}/{{award.name|slugify}}" title="{{ award.description }}" class="medal"><span class="badge{{ award.type }}">&#9679;</span>&nbsp;{{ award.name }}</a><span class="tag-number"> &#215; {{ count|intcomma }}</span><br/>
+                            {% if forloop.counter|divisibleby:"6" %}
+                                </td>
+                                <td width="180" style="line-height:35px">
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+                </tr>
+            </table>
+        </div>
+{% endblock %}
+<!-- end user_stats.html -->

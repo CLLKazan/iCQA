@@ -1,0 +1,15 @@
+{% extends "base_content.html" %}
+{% load i18n %}
+{% block title %}{% spaceless %}{% trans "Please prove that you are a Human Being" %}{% endspaceless %}{% endblock %}
+{% block content %}
+{% comment %} this form is set up to be used in wizards {% endcomment %}
+<form name="notarobot" action="." method="POST">
+    <div>
+    {{form}}
+    </div>
+    <input type="submit" value="{% trans "I am a Human Being" %}" class="submit" style="float:left"/>
+    <input type="hidden" name="{{ step_field }}" value="{{ step0 }}" />
+    {{ previous_fields|safe }}
+    </form>
+</form>
+{% endblock %}

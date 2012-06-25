@@ -1,0 +1,17 @@
+{% load extra_filters extra_tags i18n email_tags %}
+
+{% if not exclude_greeting %}
+{% trans "Hello" %} {{ recipient.username }},
+{% endif %}
+
+{% block content %}{% endblock%}
+
+{% trans "Thanks" %},
+{{settings.APP_SHORT_NAME}}
+
+{% if not exclude_finetune %}
+{% trans "P.S. You can always fine-tune which notifications you receive here:" %}
+{{ settings.APP_URL }}{% url user_subscriptions id=recipient.id,slug=recipient.username|slugify %}
+{% endif %}
+
+{{ settings.EMAIL_FOOTER_TEXT }}

@@ -1,0 +1,22 @@
+{% load i18n extra_tags email_tags %}
+
+{% declare %}
+    prefix = settings.EMAIL_SUBJECT_PREFIX
+    app_name = settings.APP_SHORT_NAME
+
+    exclude_finetune = True
+{% enddeclare %}
+
+{% email %}
+    {% subject %}{% blocktrans %}{{ prefix }} Your email settings are correct: {{ app_name }}{% endblocktrans %}{% endsubject %}
+
+    {% htmlcontent notifications/base.html %}
+        {% trans "If you see this content your E-Mail settings are correct." %}
+    {% endhtmlcontent %}
+
+{% textcontent notifications/base_text.html %}
+    {% trans "If you see this content your E-Mail settings are correct." %}
+{% endtextcontent %}
+
+{% endemail %}
+

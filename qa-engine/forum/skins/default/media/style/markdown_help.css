@@ -1,0 +1,45 @@
+div.main-wrapper {
+    /*
+    margin: 30px auto;
+    overflow:hidden;
+    position:relative;
+    */
+}
+
+div.section {
+    padding-top:30px;
+}
+
+h2.section-title {
+    padding-top:10px;
+    padding-left:10px;
+    width:100%;
+    background-color:#b6c4e2;
+}
+
+div.section-description {
+    padding-top:20px;
+    padding-bottom:10px;
+}
+
+table.section-example {
+    padding-top:5px;
+    padding-bottom:10px;
+    width:100%;
+}
+
+table.section-example tr {
+}
+
+table.section-example tr td {
+    background-color:#e5ebf8;
+
+    padding:5px 5px 5px 5px;
+    width:50%;
+
+    text-align:left;
+
+    border: 1px solid #ccc;
+    -moz-border-radius:5px;
+    -webkit-border-radius:5px;
+}

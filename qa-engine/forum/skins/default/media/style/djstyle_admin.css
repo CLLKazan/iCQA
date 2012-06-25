@@ -1,0 +1,63 @@
+@import "jquery.autocomplete.css";
+
+textarea {
+    width: 100%;
+}
+
+input.longstring {
+    width: 100%;
+}
+
+#admin_form tr th {
+    white-space: nowrap;        
+}
+
+#admin_form tr th a {
+    font-size: 80%;        
+}
+
+#admin_form tr th .sep {
+    font-size: 80%;
+    margin-left: 6px;
+    margin-right: 6px;
+}
+
+#admin_form tr td:first-of-type {
+    width: 100%;
+}
+
+.string-list-input {
+    vertical-align: middle;
+}
+
+.string-list-input input {
+    width: 600px;
+    margin: 0px;
+}
+
+.string_list_widget_button {
+    background:url("../img/admin/nav-bg.gif") repeat-x scroll center bottom #dcdcdc;
+    border-color:#DDDDDD #AAAAAA #AAAAAA #DDDDDD;
+    border-style:solid;
+    border-width:1px;
+    color:black;
+    height: 20px;
+    width: 20px;
+}
+
+.string_list_widget_button.add {
+    position: relative;
+    left: 612px;
+}
+
+.admin_message {
+    background-color: #ffffe0;
+    border: 3px double #b8860b;
+    padding: 4px;
+}
+
+.ajax_indicator {
+    background: transparent url('../images/indicator.gif') top left no-repeat;
+    padding: 7px 25px;
+    min-height: 24px;
+}

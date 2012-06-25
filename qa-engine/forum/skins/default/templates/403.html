@@ -1,0 +1,36 @@
+{% extends "base_content.html" %}
+{% load i18n %}
+{% block title %}{% trans "Forbidden" %}{% endblock %}
+{% block forestyle%}
+    <style type="text/css">
+ 		form input { margin-right: 5px; }
+	</style>
+{% endblock %}
+{% block content %}
+<div id="main-bar" class="headNormal">
+    {% trans "Forbidden" %}
+</div>
+<div id="main-body" class="">
+    <div style="padding:5px 0px 10px 0;line-height:25px;">
+        <h3>{% trans "Sorry, you don't have permissions to access this page." %}</h3>
+        <div style="margin-top:5px">
+        {% trans "This might have happened for the following reasons:" %}<br/>
+            <ul>
+            <li>{% trans "you followed a link on an email, but you're currently logged in as another user;" %}</li>
+            <li>{% trans "there are errors in the url, please confirm it;" %}</li>
+            <li>{% trans "if you believe you shouldn't bee seeing this error, please" %}
+				<a href="{% if settings.CONTACT_URL %}{{ settings.CONTACT_URL }}{% else %}{% url feedback %}{% endif %}" target="_blank">
+				    {% trans "report this problem" %}
+				</a>
+			</li>
+            </ul>
+        </div>
+        <ul>
+            <li><a href="{% url index %}">{% trans "to home page" %} &raquo;</a></li>
+            <li><a href="{% url questions %}">{% trans "see all questions" %} &raquo;</a></li>
+            <li><a href="{% url tags %}">{% trans "see all tags" %} &raquo;</a></li>
+        </ul>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+<!-- template ask.html -->
+{% load i18n extra_tags extra_filters %}
+{% block title %}{% spaceless %}{% trans "Ask a question" %}{% endspaceless %}{% endblock %}
+{% block forejs %}
+        <script type='text/javascript' src='{% media  "/media/js/wmd/showdown.js" %}'></script>
+        <script type='text/javascript' src='{% media  "/media/js/wmd/wmd.js" %}'></script>
+        <link rel="stylesheet" type="text/css" href="{% media  "/media/js/wmd/wmd.css" %}" />
+        <script type="text/html" id="question-summary-template">
+            <div class="answer-summary">
+                <a href="%URL%"><div class="answer-votes">%SCORE%</div></a>
+                <div class="answer-link">
+                    <a class="question-hyperlink" href="%URL%" title="%SUMMARY%">%TITLE%</a>
+                </div>
+            </div>
+        </script>
+        <script type="text/javascript">
+        $(function(){
+            //set current module button style
+            $("#nav_ask").attr('className',"on");
+            $('#editor').TextAreaResizer();
+
+            //toggle preview of editor
+			//todo remove copy-paste
+            var display = true;
+            var txt = "[{% trans "hide preview" %}]";
+            $('#pre-collapse').text(txt);
+            $('#pre-collapse').bind('click', function(){
+                txt = display ? "[{% trans "show preview" %}]" : "[{% trans "hide preview" %}]";
+                display = !display;
+                $('#previewer').toggle();
+                $('#pre-collapse').text(txt);
+            });
+
+            //Tags autocomplete action
+        	$("#id_tags").autocomplete("/matching_tags/", {
+                minChars: 1,
+        		matchContains: true,
+                max: 10,
+                multiple: true,
+                multipleSeparator: " ",
+                highlightItem: true,
+                scroll: true,
+                scrollHeight: 300,
+
+
+        		/*
+        		formatItem: function(row, i, max) {
+        			return row.n + " ("+ row.c +")";
+        		},
+                formatResult: function(row, i, max){
+                    return row.n;
+                }
+                */
+
+                formatItem: function(row, i, max, value) {
+                    return row[1] + " (" + row[2] + ")";
+                },
+
+                formatResult: function(row, i, max, value){
+                    return row[1];
+                }
+
+            });
+
+        });
+
+        function submitClicked(e, f) {
+            if(!(browserTester('chrome') || browserTester('safari'))) {
+                $("input.submit")[0].disabled=true;
+            }
+            window.removeEventListener('beforeunload', beforeUnload, true);
+            if (f) {
+                f.submit();
+            }
+        }
+
+        function beforeUnload(e) {
+            if($("input#id_title")[0].value != "" || $("textarea#editor")[0].value != "" || $("input#id_tags")[0].value != "") {
+                return yourWorkWillBeLost(e);
+            }
+        }
+        window.addEventListener('beforeunload', beforeUnload, true);
+
+        var related_questions_url = "{% url related_questions %}";
+        </script>
+        <script src="{% media "/media/js/osqa.ask.js" %}" type="text/javascript"></script>
+{% endblock %}
+
+{% block content %}
+<div id="main-bar" class="headNormal">
+	{% trans "Ask a question" %}
+</div>
+<div id="main-body" class="ask-body">
+    <div id="askform">
+        <form id="fmask" action="" method="post" accept-charset="utf-8">
+			{% if not request.user.is_authenticated %}
+            <div class="message">
+                <span class="strong big">{% trans "You are welcome to start submitting your question anonymously." %}</span>
+                <p>{% blocktrans %}
+                    After submiting your question, you will be redirected to the login/signup page.
+                    Your question will be saved in the current session and will be published after you login with your existing account,
+                    or signup for a new account{% endblocktrans %}{% if "ask"|contained_in:settings.REQUIRE_EMAIL_VALIDATION_TO %}
+                    {% trans "and validate your email." %}{% else %}.{% endif %}</p>
+            </div>
+            {% else %}
+                {% if not request.user.email_valid_and_can_ask %}
+                    <div class="message">
+                        {% blocktrans %}Remember, your question will not be published until you validate your email.{% endblocktrans %}
+                        <a href="{% url send_validation_email %}">{% trans "Send me a validation link." %}</a>
+                    </div>
+                {% endif %}
+			{% endif %}
+            <div class="form-item">
+                <label for="id_title" ><strong>{{ form.title.label_tag }}:</strong></label> <span class="form-error"></span><br/>
+                {{ form.title }} {{ form.title.errors }}
+                <div class="title-desc">
+                    {{ form.title.help_text }}
+                </div>
+            </div>
+            <div id="ask-related-questions"></div>
+            <div class="form-item">
+                <div id="wmd-button-bar" class="wmd-panel"></div>
+                {{ form.text }} {{ form.text.errors }}
+                <div class="preview-toggle">
+                    <table width="100%">
+                        <tr>
+                            <td>
+                                <span id="pre-collapse" title="{% trans "Toggle the real time Markdown editor preview" %}">{% trans "toggle preview" %}</span>
+                            </td>
+                            <td style="text-align: right;" id="editor-metrics"></td>
+                            {% if settings.WIKI_ON %}
+                            <td class="tright">
+                                {{ form.wiki }} <span class="help_text" title="{{form.wiki.help_text}}">{{ form.wiki.label_tag }} </span>
+                            </td>
+                            {% endif %}
+                        </tr>
+
+                    </table>
+                </div>
+                <div id="previewer" class="wmd-preview"></div>
+                <span class="form-error"></span>
+            </div>
+            <div class="form-item">
+                <strong>{{ form.tags.label_tag }}:</strong> {% trans "(required)" %} <span class="form-error"></span><br/>
+                {{ form.tags }}  {{ form.tags.errors }}
+            </div>
+			<p class="title-desc">
+				{{ form.tags.help_text }}
+			</p>
+			
+            {% if form.recaptcha %}
+            <div class="question-captcha" style="float: left">
+            	{{ form.recaptcha.errors }}
+            	{{ form.recaptcha }}
+            </div>
+            <div class="clear"></div>
+            {% endif %}
+			
+            {% if not request.user.is_authenticated %}                                                                        
+            <input name="ask" type="button" value="{% trans "Login/signup to post your question" %}" class="submit" onclick="submitClicked(event, this.form)"/>
+			{% else %}
+            <input name="ask" type="button" value="{% trans "Ask your question" %}" class="submit" onclick="submitClicked(event, this.form)"/>
+            {% endif %}
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block sidebar %}
+{% include "question_edit_tips.html" %}
+{% endblock %}
+
+{% block endjs %}
+{% endblock %}
+<!-- end template ask.html -->

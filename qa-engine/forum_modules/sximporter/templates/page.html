@@ -1,0 +1,27 @@
+{% extends "osqaadmin/base.html" %}
+
+{% load i18n %}
+{% load user_tags %}
+
+{% block subtitle %}
+    {% trans "SX Importer" %}
+{% endblock %}
+{% block description %}
+    {% trans "Welcome to Stack Exchange dump importer." %}
+{% endblock %}
+
+{% block admincontent %}
+    <form method="post" action="" enctype="multipart/form-data">
+    <input type="file" name="dump" /><br>
+    {% trans "Your user id in stack exchange" %}
+    <input type="test" name="owneruid" size="3" value="2" /><br />
+
+    <input type="checkbox" checked="checked" name="mergesimilar" />
+    {% trans "Merge users with same user name and email" %}<br />
+
+    <input type="submit" value="submit" />
+    </form>
+    {% for n in names %}
+        <p>{{ n }}</p>
+    {% endfor %}
+{% endblock %}

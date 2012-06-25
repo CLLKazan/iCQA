@@ -1,0 +1,26 @@
+{% load i18n %}
+
+<p>
+{% blocktrans %}
+Award {{ awarded_user }} with reputation points.
+{% endblocktrans %}
+</p>
+
+<p>
+    Points:
+    <span id="reputation_points_award">1</span>
+</p>
+
+<div class="award_points_slider"></div>
+
+<input type="hidden" name="points" id="points_input" value="0" />
+
+<script>
+$('.award_points_slider').slider({
+    min: 1, max: {{ user.reputation }},
+    slide: function(evt, ui) {
+        $('#reputation_points_award').html(ui.value)
+        $('#points_input').val(ui.value)
+    }
+});
+</script>

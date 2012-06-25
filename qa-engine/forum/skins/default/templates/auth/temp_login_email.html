@@ -1,0 +1,31 @@
+{% load i18n extra_tags email_tags %}
+
+{% declare %}
+    prefix = settings.EMAIL_SUBJECT_PREFIX
+    app_name = settings.APP_SHORT_NAME
+
+    exclude_finetune = True
+{% enddeclare %}
+
+{% email %}
+    {% subject %}{% blocktrans %}{{ prefix }} Temporary login link{% endblocktrans %}{% endsubject %}
+
+    {% htmlcontent notifications/base.html %}
+        <p style="{{ p_style }}">
+            {% blocktrans %}The following link grants you a one time access to your account at {{ app_name }}.{% endblocktrans %}
+        </p>
+        <p style="{{ p_style }}"><a  style="{{ a_style }}" href="{% fullurl auth_tempsignin user=recipient.id,code=temp_login_code %}">{% trans "Go to your account" %}</a></p>
+
+        <p style="{{ p_style }}">{% trans "If the above link is not clickable, copy and paste this url into your web browser's address bar:" %}</p>
+
+        <p style="{{ p_style }}">{% fullurl auth_tempsignin user=recipient.id,code=temp_login_code %}</p>
+    {% endhtmlcontent %}
+
+{% textcontent notifications/base_text.html %}
+{% blocktrans %}The following url grants you a one time access to your account at {{ app_name }}.{% endblocktrans %}
+
+{% fullurl auth_tempsignin user=recipient.id,code=temp_login_code %}
+{% endtextcontent %}
+
+{% endemail %}
+

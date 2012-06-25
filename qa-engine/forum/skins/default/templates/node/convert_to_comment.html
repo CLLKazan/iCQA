@@ -1,0 +1,10 @@
+{% load i18n %}
+
+<div>
+    <p>{% trans "Place the comment under:" %}</p>
+    <select name="under">
+        {% for id, descr in nodes %}
+            <option value="{{ id }}">{{ descr }}</option>
+        {% endfor %}
+    </select>
+</div>                   

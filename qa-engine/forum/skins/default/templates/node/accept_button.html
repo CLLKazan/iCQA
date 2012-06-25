@@ -1,0 +1,22 @@
+{% load i18n %}
+
+{% if can_accept %}
+    <a id="accept-answer-{{ answer.id }}" class="ajax-command accept-answer{% if answer.nis.accepted %} on{% endif %}"
+      title=" {% if answer.nis.accepted %}
+              {% blocktrans with answer.nstate.accepted.by.username as who %}{{ who }} has selected this answer as the correct answer{% endblocktrans %}
+              {% else %}
+                {% trans "mark this answer as the accepted answer" %}
+              {% endif %}"
+              bn:on="{% blocktrans with answer.nstate.accepted.by.username as who %}{{ who }} has selected this answer as the correct answer{% endblocktrans %}"
+              bn:off="{% trans "mark this answer as the accepted answer" %}"
+       href="{% url accept_answer id=answer.id %}" rel="nofollow"> 
+    </a>
+{% else %}
+    {% if answer.nis.accepted %}
+      <a class="accept-answer on"
+        title="{% blocktrans with answer.nstate.accepted.by.username as who %}{{ who }} has selected this answer as the correct answer{% endblocktrans %}"
+        href="{% url accept_answer id=answer.id %}" rel="nofollow"> 
+      </a>
+    {% endif %}
+{% endif %}
+

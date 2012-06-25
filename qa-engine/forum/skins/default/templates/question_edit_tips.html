@@ -1,0 +1,25 @@
+<!-- question_edit_tips.html -->
+{% load markup %}
+{% load i18n general_sidebar_tags %}
+<div class="boxC" id="title_side_bar">
+    <p class="subtitle darkred">{% trans "Title Tips" %}</p>
+    <div class="list-item">
+        {{ settings.QUESTION_TITLE_TIPS|markdown:"settingsparser" }}
+        <p class='info-box-follow-up-links'>
+            <a href="{% url faq %}" target="_blank" title="{% trans "see frequently asked questions" %}">{% trans "faq" %} &raquo;</a>
+        </p>
+    </div>
+</div>
+
+{% markdown_help %}
+
+<div class="boxC" id="tags_side_bar" align="left">
+    <p class="subtitle darkred">{% trans "What Are Tags" %}</p>
+    <div class="list-item">
+        {{ settings.QUESTION_TAG_TIPS|markdown:"settingsparser" }}
+    </div>
+</div>
+
+
+<!-- end question_edit_tips.html  -->
+                                  

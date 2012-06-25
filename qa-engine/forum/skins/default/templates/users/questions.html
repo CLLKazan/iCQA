@@ -1,0 +1,11 @@
+{% extends "user.html" %}
+
+{% load extra_tags %}
+{% load question_list_tags %}
+{% block usercontent %}
+<div class="user-stats-table">
+    {% for favorite in favorites %}
+        {% question_list_item favorite.node favorite_count=yes signature_type=badges %}
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "base_content.html" %}
+{% load i18n %}
+{% load markup %}
+{% block title %}{% spaceless %}{{ title }}{% endspaceless %}{% endblock %}
+
+{% block content %}
+<div class="headNormal">{{ title }}</div>
+<div class="content">
+{{ content|markdown:"settingsparser" }}
+</div>
+{% endblock %}
+

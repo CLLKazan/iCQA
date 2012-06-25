@@ -1,0 +1,80 @@
+{% extends "osqaadmin/base.html" %}
+
+{% load i18n %}
+{% load user_tags %}
+
+{% block subtitle %}
+    {% trans "Dashboard" %}
+{% endblock %}
+{% block description %}
+    {% trans "Welcome to the OSQA administration area." %}
+{% endblock %}
+
+{% block admincontent %}
+    <table width="100%">
+        <tr>
+            <td width="50%" valign="top">
+                <h3>{%trans "Site statistics" %}</h3>
+                <table>
+                    <tr>
+                        <td>
+                        {{ statistics.total_questions }} {% trans "question" %}{{ statistics.total_questions|pluralize }} ({{ statistics.questions_last_24 }} {% trans "in the last 24 hours" %})
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                        {{ statistics.total_answers }} {% trans "answer" %}{{ statistics.total_answers|pluralize }} ({{ statistics.answers_last_24 }} {% trans "in the last 24 hours" %})
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                        {{ statistics.total_users }} {% trans "user" %}{{ statistics.total_users|pluralize }} ({{ statistics.users_last_24 }} {% trans "joined in the last 24 hours" %})
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td valign="top">
+                <h3>{%trans "Site status" %}</h3>
+                <table>
+                    <tr>
+                        <td>
+                            {% ifequal settings_pack "bootstrap" %}
+                                {% trans "Your site is running in bootstrap mode, click the button below to revert to defaults." %}<br />
+                            {% else %}
+                                {% ifequal settings_pack "default" %}
+                                    {% trans "Your site is running in standard mode, click the button below to run in bootstrap mode." %}<br />
+                                {% else %}
+                                    {% trans "Your site is running with some customized settings, click the buttons below to run with defaults or in bootstrap mode" %}
+                                {% endifequal %}
+                            {% endifequal %}
+                            {% ifnotequal settings_pack "default" %}
+                                <button onclick="if (window.confirm('{% trans "Are you sure you want to revert to the defaults?" %}')) window.location='{% url admin_go_defaults %}';">{% trans "revert to defaults" %}</button>
+                            {% endifnotequal %}
+                            {% ifnotequal settings_pack "bootstrap" %}
+                                <button onclick="if (window.confirm('{% trans "Are you sure you want to run bootstrap mode?" %}')) window.location='{% url admin_go_bootstrap %}';">{% trans "go bootstrap" %}</button>
+                            {% endifnotequal %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <em>"Bootstrap mode" relaxes the minimum required reputation to perform actions like voting and commenting.
+                            This is useful to help new communities get started.</em>
+                        </td>
+                    </tr>
+                </table>
+                <h3>{%trans "Recalculate scores and reputation" %}</h3>
+                 <button onclick="if (window.confirm('{% trans "This is a heavy operation, are you sure?" %}')) window.location='{% url admin_denormalize %}';">{% trans "Recalculate" %}</button>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <h3>{% trans "Recent activity" %}</h3>
+                <table width="100%">
+                {% for activity in recent_activity %}
+                    {% activity_item activity request.user %}
+                {% endfor %}
+                </table>
+            </td>
+        </tr>
+    </table>        
+{% endblock %}

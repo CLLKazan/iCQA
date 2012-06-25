@@ -1,0 +1,35 @@
+{% load extra_filters extra_tags i18n email_tags %}
+
+{% declare %}
+    p_style = settings.EMAIL_PARAGRAPH_STYLE
+    a_style = settings.EMAIL_ANCHOR_STYLE
+    hr_style = "color:#ccc;border:0;height:1px;background-color:#ccc;margin-bottom:20px;"
+    small_style = "color:#333333;font-family:'Lucida Grande', Trebuchet, Helvetica, sans-serif;font-size:12px;"
+    table_style = "border:20px %s solid;margin:10px auto 10px auto;width:750px;text-align:left;" % settings.EMAIL_BORDER_COLOR
+{% enddeclare %}
+<html>
+<head>
+<base href="{{ settings.APP_URL }}">
+</head>
+<body style="margin:0;">
+<center>
+<table style="{{ table_style }}">
+<tbody><tr><td style="padding:20px;">
+<a href="{{ settings.APP_URL }}" style="border: 0;"><img src="{{ settings.APP_URL }}{{ settings.APP_LOGO }}" alt="{{settings.APP_TITLE}}" border="0"/></a>
+<hr style="{{ hr_style }}" />
+{% if not exclude_greeting %}
+<p style="{{ p_style }}">{% trans "Hello" %} {{ recipient.username }},</p>
+{% endif %}
+{% block content %}{% endblock%}
+<p style="{{ p_style }}">{% trans "Thanks" %},<br />{{settings.APP_SHORT_NAME}}</p>
+{% if not exclude_finetune %}
+<p style="{{ p_style }}">{% trans "P.S. You can always fine-tune which notifications you receive" %}
+<a href="{{ settings.APP_URL }}{% url user_subscriptions id=recipient.id,slug=recipient.username|slugify %}" style="{{ a_style }}">{% trans "here" %}</a>.
+{% endif %}
+</p>
+<hr style="{{ hr_style }}" />
+<p style="{{ p_style }}"><small style="{{ small_style }}">{{ settings.EMAIL_FOOTER_TEXT }}</small></p>
+</td></tr></tbody></table>
+</center>
+</body>
+</html>

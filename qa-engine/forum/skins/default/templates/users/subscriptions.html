@@ -1,0 +1,53 @@
+{% extends "user.html" %}
+<!-- user_subscriptions.html -->
+{% load i18n %}
+{% load extra_tags %}
+{% load humanize %}
+
+{% block userjs %}
+    <script type="text/javascript">
+        function enableSettings() {
+            $("div#subscriptions_settings").show();
+            $("div#subscriptions_management").hide();
+
+            $("a#subscriptions_settings_button").addClass('on');
+            $("a#subscriptions_management_button").removeClass("on");
+
+            //location.reload(true);
+        }
+
+        function enableManagement() {
+            $("div#subscriptions_settings").hide();
+            $("div#subscriptions_management").show();
+
+            $("a#subscriptions_settings_button").removeClass('on');
+            $("a#subscriptions_management_button").addClass('on');
+
+            //location.reload(true);
+        }
+    </script>
+{% endblock %}
+
+{% block usercontent %}
+    <br/>
+
+    <div id="navBar"><div class="tabsA">
+        <a href='{% url user_subscriptions id=view_user.id slug=view_user.username|slugify %}?tab=settings' id="subscriptions_settings_button"  {%  if not manage_open %}class="on"{% endif %}>Settings</a>
+        <a href='{% url user_subscriptions id=view_user.id slug=view_user.username|slugify %}?tab=manage' id="subscriptions_management_button"  {%  if manage_open %}class="on"{% endif %}>Manage</a>
+    </div></div>
+
+    <br/>
+
+    {% if not manage_open %}
+        <div id="subscriptions_settings" >
+            {% include "users/subscriptions_settings.html" %}
+        </div>
+    {% endif %}
+
+    {% if manage_open %}
+        <div id="subscriptions_management" >
+            {% include "users/subscriptions_management.html" %}
+        </div>
+    {% endif %}
+{% endblock %}
+<!-- end user_subscriptions.html -->

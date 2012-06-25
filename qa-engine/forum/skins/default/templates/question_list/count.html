@@ -1,0 +1,26 @@
+{% spaceless %}
+{% load i18n humanize extra_tags %}
+{% declare %}
+    answer_count = questions.children_count('answer')
+{% enddeclare %}
+
+<div class="boxC">
+    <div class="questions-count">
+        {{ questions.paginator.count }}<span style="color:black;font-size:14px;margin-left:5px">{{ list_description }}</span>
+    </div>
+
+
+    {% if answer_count %}
+    <div class="questions-count">
+        {{ answer_count }}<span style="color:black;font-size:14px;margin-left:5px">{% trans "answers" %}</span>
+    </div>
+
+    {% endif %}
+
+    <div>
+        <p class="nomargin">
+            {{ questions.paginator.sort_description }}
+        </p>
+    </div>
+</div>
+{% endspaceless %}

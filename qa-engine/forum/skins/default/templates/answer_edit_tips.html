@@ -1,0 +1,26 @@
+<!-- template answer_edit_tips.html -->
+{% load i18n general_sidebar_tags %}
+<div class="boxC">
+    <p class="subtitle darkred">{% trans "answer tips" %}</p>
+    <div>
+        <ul class="list-item">
+            <li> <b>{% trans "please make your answer relevant to this community" %}</b>
+            </li>
+            <li>
+                {% trans  "try to give an answer, rather than engage into a discussion" %}
+            </li>
+            <li>
+                {% trans "please try to provide details" %}
+            </li>
+            <li>
+				{% trans "be clear and concise" %}
+            </li>
+        </ul>
+        <p class='info-box-follow-up-links'>
+            <a href="{% url faq %}" target="_blank" title="{% trans "see frequently asked questions" %}">faq &raquo;</a>
+        </p>
+    </div>
+</div>
+
+{% markdown_help %}
+<!-- end template answer_edit_tips.html -->

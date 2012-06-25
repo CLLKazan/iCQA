@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+<!-- questions.html -->
+{% load question_list_tags %}
+{% load i18n %}
+{% load extra_tags %}
+{% load general_sidebar_tags %}
+
+{% block title %}{% spaceless %}{{ page_title }}{% endspaceless %}{% endblock %}
+
+{% block meta %}
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ feed_url }}">
+{% endblock %}
+
+{% block content %}
+
+<div class="tabBar">
+    {% include "question_list/title.html" %}
+    <a class="feed-icon" style="background-image:url('{% media "media/images/feed-icon-small.png" %}');" href="{{ feed_url }}" title="{% trans "subscribe to question RSS feed" %}"></a>
+    {{ questions.paginator.sort_tabs }}
+</div>
+<div id="listA">{% for question in questions.paginator.page %}
+    {% question_list_item question %}
+{% endfor %}</div>
+{% endblock %}
+
+{% block tail %}
+    <div class="pager">{{ questions.paginator.page_numbers }}</div>
+    <div class="pagesize">{{ questions.paginator.page_sizes }}</div>
+{% endblock %}
+
+{% block sidebar %}
+    {% include "question_list/count.html" %}
+    {% sidebar_upper %}
+    {% tag_selector %}
+    {% sidebar_lower %}
+    {% question_list_related_tags questions.paginator.page %}
+
+{% endblock %}
+<!-- end questions.html -->

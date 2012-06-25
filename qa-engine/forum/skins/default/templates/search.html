@@ -1,0 +1,25 @@
+{% extends "base_content.html" %}
+
+{% load i18n %}
+
+{% block content %}
+<div id="main-bar" class="headNormal">
+	{% blocktrans with settings.APP_SHORT_NAME as app_name %}
+	    Search in {{  app_name }}
+	{%  endblocktrans %}
+</div>
+<div id="main-body" style="text-align: center; height: 400px;">
+<form action="{% url search %}" method="get">
+    <div>
+        <input type="text" class="searchInput" value="{{ keywords }}" name="q" id="keywords" style="width: 600px" />
+        <input type="submit" name="Submit" value="{% trans "search" %}" class="searchBtn" />
+    </div>
+    <div class="options">
+        <input id="type-question" type="radio" value="question" name="t"
+            checked="checked" /><label for="type-question">{% trans "questions" %}</label>
+        <input id="type-tag" type="radio" value="tag" name="t" /><label for="type-tag">{% trans "tags" %}</label>
+        <input id="type-user" type="radio" value="user" name="t" /><label for="type-user">{% trans "users" %}</label>
+    </div>
+</form>
+</div>
+{% endblock %}

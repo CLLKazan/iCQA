@@ -1,0 +1,101 @@
+{% extends basetemplate %}
+
+{% load i18n humanize %}
+
+{% block subtitle %}{% trans "Moderation" %}{% endblock %}
+{% block pagename %}{% trans "Moderation" %}{% endblock %}
+{% block description %}{% trans "These tools allow you to search for undesired behaviours and cheating patterns." %}{% endblock %}
+
+{% block admincontent %}
+    <div class="module">
+        <form action="" id="changelist" method="POST">
+            <div class="actions">
+                {% trans "Verify:" %}
+                <input type="text" size="3" name="limit" id="filter-limit" value="5" />
+                <select name="sort" id="filter-sort">
+                    <option value="high-rep">{% trans "highest ranking users" %}</option>
+                    <option value="newer">{% trans "newer users" %}</option>
+                    <option value="older">{% trans "older users" %}</option>
+                    <option value="ids">{% trans "users with these ids" %}</option>
+                </select>
+                <span id="filter-ids" style="display: none">
+                    <input type="text" name="ids" size="15" />
+                    <small>{% trans "(Comma separated list of user ids)" %}</small>
+                </span>
+                <input type="submit" value="{% trans "Go" %}" />
+            </div>
+        </form>
+        <script type="text/javascript">
+            $(function() {
+                $limit = $('#filter-limit');
+                $sort = $('#filter-sort');
+                $ids = $('#filter-ids');
+
+                function verify_sort() {
+                    if ($sort.val() == "ids") {
+                        $ids.show();
+                        $limit.hide();
+                    } else {
+                        $ids.hide();
+                        $limit.show();
+                    }
+                }
+
+                verify_sort();
+                $sort.change(verify_sort);
+            })
+        </script>
+        {% if cheaters %}
+        <table cellspacing="0" width="100%">
+            <caption>{% trans "Possible cheaters" %}</caption>
+            {% for cheater, fakes in cheaters %}
+            <tr>
+                <td>
+                    <div class="cheater-info">
+                        <p><a href="{{ cheater.get_profile_url }}">{{ cheater.username }}</a></p>
+                        <p><b>{% trans "Email" %}</b>
+                        {% if cheater.email_isvalid %}
+                            <img src="{{ settings.ADMIN_MEDIA_PREFIX }}img/admin/icon-yes.gif" alt="{% trans "Validated" %}" />
+                        {% else %}
+                            <img src="{{ settings.ADMIN_MEDIA_PREFIX }}img/admin/icon-no.gif" alt="{% trans "Not validated" %}" />
+                        {% endif %}
+                        <a href="mailto: {{ cheater.email }}">{{ cheater.email }}</a></p>
+                        <p><b>{% trans "Reputation:" %}</b> {{ cheater.reputation|intcomma }}</p>
+                    </div>
+                    <table cellspacing="0" width="100%">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Profile" %}</th>
+                                <th>{% trans "Email" %}</th>
+                                <th>{% trans "Reputation" %}</th>
+                                <th>{% trans "Affecting actions" %}</th>
+                                <th>{% trans "Cross ips" %}</th>
+                                <th>{% trans "Cheating score" %}</th>
+                            </tr>
+                        </thead>
+                        <caption>{% trans "Possible fake accounts" %}</caption>
+                        {% for fake in fakes %}
+                            <tr>
+                                <td><a href="{{ fake.get_profile_url }}">{{ fake.username }}</a></td>
+                                <td>
+                                    {% if fake.email_isvalid %}
+                                        <img src="{{ settings.ADMIN_MEDIA_PREFIX }}img/admin/icon-yes.gif" alt="{% trans "Validated" %}" />
+                                    {% else %}
+                                        <img src="{{ settings.ADMIN_MEDIA_PREFIX }}img/admin/icon-no.gif" alt="{% trans "Not validated" %}" />
+                                    {% endif %}
+                                    <a href="mailto: {{ fake.email }}">{{ fake.email }}</a>
+                                </td>
+                                <td>{{ fake.reputation|intcomma }}</td>
+                                <td>{{ fake.fdata.affect_count }} {% trans "out of" %} {{ fake.fdata.total_actions }} ({{ fake.fdata.action_ratio|stringformat:".2f" }}%)</td>
+                                <td>{{ fake.fdata.cross_ip_count }} {% trans "out of" %} {{ fake.fdata.total_ip_count }} ({{ fake.fdata.cross_ip_ratio|stringformat:".2f" }}%)</td>
+                                <td>{{ fake.fdata.fake_score|stringformat:".2f" }}</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% endif %}
+    </div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% load i18n %}
+
+<table>
+    <caption><h2>{% trans "Suspend user" %}</h2></caption>
+    <tr>
+        <td>
+            <select name="bantype" id="bantype">
+                <option value="indefinitely">{% trans "Indefinetly" %}</option>
+                <option value="forxdays">{% trans "For X days" %}</option>
+            </select>
+        </td>
+    </tr>
+    <tr id="forxdays" style="display: none">
+        <td>
+            {% trans "Suspend for" %}<input type="text" size="3" style="width: 30px; height: 1.2em; margin: 0 0.5em 0 0.5em; font-size: 1em;" name="forxdays" value="3" />{% trans "days" %}
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <p><b>{% trans "Public message" %}:</b></p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <textarea rows="3" name="publicmsg" cols="35"></textarea><br />
+            <small>{% trans "This message will be visible through the user activity log."  %}</small>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <p><b>{% trans "Private message" %}:</b></p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <textarea rows="3" name="privatemsg" cols="35"></textarea><br />
+            <small>{% trans "If set, only the suspended user will see this message."  %}</small>
+        </td>
+    </tr>
+</table>
+<script type="text/javascript">
+    $('#bantype').change(function() {
+        if ($(this).val() == 'forxdays') {
+            $('#forxdays').slideDown('fast');
+        } else {
+            $('#forxdays').slideUp('fast');
+        }
+    });
+</script>
