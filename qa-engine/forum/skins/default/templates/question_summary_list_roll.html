@@ -1,0 +1,55 @@
+    <div class="qstA">
+        <h2>
+            <a href="{{ question.get_absolute_url }}">{{ question.headline }}</a>
+        </h2>
+        <div class="stat">
+            <table>
+                <tr>
+                    <td><span class="num">{{ question.answer_count|intcomma }}</span> </td>
+                    <td><span class="num">{{ question.score|intcomma }}</span> </td>
+                    <td><span class="num">{{ question.view_count|decorated_int|safe }}</span> </td>
+                </tr>  
+                <tr>
+                    <td><span class="unit">{% trans "answers" %}</span></td>
+                    <td><span class="unit">{% trans "votes" %}</span></td>
+                    <td><span class="unit">{% trans "views" %}</span></td>
+                </tr> 
+            </table>
+        </div>
+        
+        <div class="summary">
+            {{ question.summary }}...                
+        </div>
+        
+        {% ifequal tab_id 'active'%}
+        {% if question.wiki and settings.WIKI_ON %}
+        <span class="from wiki">{% trans "community wiki" %}</span>
+        <span class="date" title="{{ question.added_at }}">{% diff_date question.added_at %}</span>
+        {% else %}
+        <div class="from">
+            {% comment %}{% gravatar question.last_activity_by 24 %}{% endcomment %}
+            <span class="author"><a href="{{ question.last_activity_by.get_profile_url }}">{{ question.last_activity_by }}</a></span>
+            <span class="score">{% get_score_badge question.last_activity_by %} </span>
+            <span class="date" title="{{ question.last_activity_at }}">{% diff_date question.last_activity_at %}</span>
+        </div>
+        {% endif %}
+        {% else %}
+        {% if question.wiki and settings.WIKI_ON %}
+        <span class="from wiki">{% trans "community wiki" %}</span>
+        <span class="date" title="{{ question.added_at }}">{% diff_date question.added_at %}</span>
+        {% else %}
+        <div class="from">
+            {% comment %}{% gravatar question.author 24 %}{% endcomment %}
+            <span class="author"><a href="{{ question.author.get_profile_url }}">{{ question.author }}</a></span>
+            <span class="score">{% get_score_badge question.author %} </span>
+            <span class="date" title="{{ question.added_at }}">{% diff_date question.added_at %}</span>
+        </div>
+        {% endif %}
+        {% endifequal %}
+        
+        <div class="tags">
+        {% for tag in question.tagname_list %}
+        <a class="tag-link-{{ tag }}" href="{% url tag_questions tag|urlencode %}" title="{% trans "see questions tagged" %}'{{ tag }}'{% trans "using tags" %}" rel="tag">{{ tag }}</a>
+        {% endfor %}
+        </div>
+    </div>

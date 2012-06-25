@@ -1,0 +1,12 @@
+{% load extra_filters ui_registry i18n %}
+{% with view_user.username|slugify as user_slug %}
+<div class="tabBar">
+    <div class="tabsA">
+        {% loopregistry profile_tabs %}{% spaceless %}
+            <a title="{{ tab_description }}" id="{{ tab_name }}" {% ifequal active_tab tab_name %}class="on"{% endifequal %} href="{{ tab_url }}">
+                {{ tab_title }}
+            </a>
+        {% endspaceless %}{% endloopregistry %}
+    </div>
+</div>
+{% endwith %}

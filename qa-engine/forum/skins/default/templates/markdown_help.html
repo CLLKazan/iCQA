@@ -1,0 +1,250 @@
+{% extends "base_content.html" %}
+{% load extra_tags %}
+{% load humanize %}
+{% load i18n %}
+
+{% block fulltitle %}{% spaceless %}{% trans "Markdown Help" %}{% endspaceless %}{% endblock %}
+
+{% block forejs %}
+    <link rel="stylesheet" type="text/css" media="all" href="{% media  "/media/style/markdown_help.css" %}" />
+{% endblock %}
+
+{% block content %}
+    <div id="main-wrapper"><br /><br />
+        <div id="heading">
+            <h1>{% trans "Markdown Syntax" %}</h1>
+            <p>{% blocktrans %}This document describes some of the more important parts of Markdown (for writers, that is).  There's a lot more to the syntax than is mentioned here, though.  To get the full syntax documentation, go to John Gruber's <a href="http://daringfireball.net/projects/markdown/syntax" rel="nofollow">Markdown Syntax</a> page{% endblocktrans %}</p>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">{% trans "Headers" %}</h2>
+            <div class="section-description">
+                {% trans "For top-level headers underline the text with equal signs.  For second-level headers use dashes to underline." %}
+            </div>
+            <table class="section-example"><tr>
+                <td>
+                    <code>{% trans "This is an H1" %}</code><br />
+                    <code>============= </code>
+                </td>
+                <td>
+                    <h1>{% trans "This is an H1" %}</h1>
+                </td>
+            </tr></table>
+            
+            <table class="section-example"><tr>
+                <td>
+                    <code>{% trans "This is an H2" %}</code><br />
+                    <code>-------------</code>
+                </td>
+                <td>
+                    <h2>{% trans "This is an H2" %}</h2>
+                </td>
+             </tr></table>
+
+            <div class="section-description">
+                {%  blocktrans %}If you would rather, you can prefix headers with a hash (#) symbol instead.  The number of hash symbols indicates the header level.  For example, a single hash indicates a header level of one while two indicates the second header level:{%  endblocktrans %}
+            </div>
+            <table class="section-example"><tr>
+                <td>
+                    <code># {% trans "This is an H1" %}</code>
+                </td>
+                <td>
+                    <h1>{% trans "This is an H1" %}</h1>
+                </td>
+            </tr></table>
+
+            <table class="section-example"><tr>
+                <td>
+                    <code>## {% trans "This is an H2" %}</code>
+                </td>
+                <td>
+                    <h2>{% trans "This is an H2" %}</h2>
+                </td>
+            </tr></table>
+
+            <table class="section-example"><tr>
+                <td>
+                    <code>### {% trans "This is an H3" %}</code>
+                </td>
+                <td>
+                    <h3>{% trans "This is an H3" %}</h3>
+                </td>
+             </tr></table>
+
+            <div class="section-description">
+                {% trans "Which you choose is a matter of style.  Whichever you thinks looks better in the text document.  In both cases, the final, fully formatted, document looks the same." %}
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">{% trans "Paragraphs" %}</h2>
+            <div class="section-description">
+                {% trans "Paragraphs are surrounded by blank lines." %}
+            </div>
+            <div class="section-example">
+                <code>{% trans "This is paragraph one." %}</code>
+            </div><br />
+            <div class="section-example">
+                <code>{% trans "This is paragraph two." %}</code>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">{% trans "Links" %}</h2>
+            <div class="section-description">
+                {%  blocktrans %}
+                There are two parts to every link.
+                The first is the actual text that the user will see and it is surrounded by brackets.
+                The second is address of the page you wish to link to and it is surrounded in parenthesis.
+                {%  endblocktrans %}
+            </div>
+            <table class="section-example"><tr>
+                <td>
+                    <code>[{% trans "link text" %}]({% trans "http://example.com/" %})</code>
+                </td>
+                <td>
+                    <a>{% trans "link text" %}</a>
+                </td>
+            </tr></table>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">{% trans "Formatting" %}</h2>
+            <div class="section-description">
+                {% trans "To indicate bold text surround the text with two star (*) symbols or two underscore (_) symbols:" %}
+            </div>
+            <table class="section-example"><tr>
+                <td>
+                    <code>**{% trans "This is bold" %}**</code>
+                </td>
+                <td>
+                    <strong>{% trans "This is bold" %}</strong>
+                </td>
+            </tr></table>
+            <table class="section-example"><tr>
+                <td>
+                    <code>__{% trans "This is also bold" %}__</code>
+                 </td>
+                 <td>
+                     <strong>{% trans "This is also bold" %}</strong>
+                 </td>
+             </tr></table>
+
+            <div class="section-description">
+                {% trans "To indicate italicized text surround the text with a single star (*) symbol or underscore (_) symbol:" %}
+            </div>
+            <table class="section-example"><tr>
+                <td>
+                    <code>*{% trans "This is italics" %}*</code>
+                </td>
+                <td>
+                    <i>{% trans "This is italics" %}</i>
+                </td>
+            </tr></table>
+            <table class="section-example"><tr>
+                <td>
+                    <code>_{% trans "This is also italics" %}_</code>
+                 </td>
+                 <td>
+                     <i>{% trans "This is also italics" %}</i>
+                 </td>
+             </tr></table>
+
+            <div class="section-description">
+                {% trans "To indicate italicized and bold text surround the text with three star (*) symbol or underscore (_) symbol:" %}
+            </div>
+            <table class="section-example"><tr>
+                <td>
+                    <code>***{% trans "This is bold and italics" %}***</code>
+                </td>
+                <td>
+                    <strong><i>{% trans "This is bold and italics" %}</i></strong>
+                </td>
+            </tr></table>
+            <table class="section-example"><tr>
+                <td>
+                    <code>___{% trans "This is also bold and italics" %}___</code>
+                </td>
+                <td>
+                    <strong><i>{% trans "This is also bold and italics" %}</i></strong>
+                </td>
+            </tr></table>
+        </div>
+
+
+        <div class="section">
+            <h2 class="section-title">{% trans "Blockquotes" %}</h2>
+            <div class="section-description">
+                {% trans "To create an indented area use the right angle bracket (&gt;) character before each line to be included in the blockquote." %}
+            </div>
+            <table class="section-example"><tr>
+                <td>
+                    <code>&gt; {% trans "This is part of a blockquote." %}</code><br />
+                    <code>&gt; {% trans "This is part of the same blockquote." %}</code>
+                </td>
+                <td>
+                    <p style="padding-left:15px;">{% trans "This is part of a blockquote." %}<br />{% trans "This is part of the same blockquote." %}</p>
+                </td>
+            </tr></table>
+
+            <div class="section-description">
+                {% trans "Rather than putting it in front of each line to include in the block quote you can put it at the beginning and end the quote with a newline." %}
+            </div>
+            <table class="section-example"><tr>
+                <td>
+                    <code>&gt; {% trans "This is part of a blockquote." %}</code><br />
+                    <code>{% trans "This continues the blockquote even though there's no bracket." %}</code><br /><br />
+                    <code>{% trans "The blank line ends the blockquote." %}</code>
+                </td>
+                <td>
+                    <p style="padding-left:15px;">{% trans "This is part of a blockquote." %} <br /> {% trans "This continues the blockquote even though there's no bracket." %}</p>
+                    <p>{% trans "The blank line ends the blockquote." %}</p>
+                </td>
+            </tr></table>
+        </div>
+
+        <div class="section">
+             <h2 class="section-title">{% trans "Lists" %}</h2>
+             <div class="section-description">
+                 {% trans "To create a numbered list in Markdown, prefix each item in the list with a number followed by a period and space.  The number you use actually doesn't matter." %}
+             </div>
+             <table class="section-example"><tr>
+                 <td>
+                    <code>1. {% trans "Item" %} 1</code><br />
+                    <code>2. {% trans "Item" %} 2</code><br />
+                    <code>3. {% trans "Item" %} 3</code>
+                 </td>
+                 <td>
+                    <ol>
+                        <li>{% trans "Item" %} 1</li>
+                        <li>{% trans "Item" %} 2</li>
+                        <li>{% trans "Item" %} 3</li>
+                    </ol>
+                 </td>
+             </tr></table>
+
+             <div class="section-description">
+                 {% trans "To create a bulleted list, prefix each item in the list with a star (*) character." %}
+             </div>
+             <table class="section-example"><tr>
+                 <td>
+                    <code>* {% trans "A list item" %}</code><br />
+                    <code>* {% trans "Another list item" %}</code><br />
+                    <code>* {% trans "A third list item" %}</code>
+                 </td>
+                 <td>
+                    <ul>
+                        <li>{% trans "A list item" %}</li>
+                        <li>{% trans "Another list item" %}</li>
+                        <li>{% trans "A third list item" %}</li>
+                    </ul>
+                 </td>
+             </tr></table>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">{% trans "A Lot More" %}</h2>
+            <div class="section-description">{% blocktrans %}There's a lot more to the Markdown syntax than is mentioned here.  But for creative writers, this covers a lot of the necessities.  To find out more about Markdown than you'd ever want to really know, <a href="http://daringfireball.net/projects/markdown/syntax" target="_blank" rel="nofollow">go to the Markdown page where it all started</a>.{% endblocktrans %}</div>
+        </div>
+    </div>
+{% endblock %}

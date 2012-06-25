@@ -1,0 +1,84 @@
+#bigicon_providers, #smallicon_providers {
+    display: block;
+    padding: 0px;
+    width:600px;
+    margin:0px 0px 5px 0px;
+    clear:both;
+}
+
+.provider_logo {
+    display: block;
+    border: 1px solid #DDD;
+    text-align: center;
+}
+
+.provider_logo.big {
+    display: block;
+    border:1px solid #DDDDDD;
+    float:left;
+    height:60px;
+    margin:3px;
+    width:110px;
+}
+
+.provider_logo.big .inner {
+    display:block;
+    margin: 0px auto;
+    margin-top: 18px;
+}
+
+.provider_logo.small {
+    border:1px solid #DDDDDD;
+    float:left;
+    height:30px;
+    margin:3px;
+    width:30px;
+}
+
+.provider_logo.small .inner {
+    display:block;
+    margin: 0px auto;
+    margin-top: 6px;
+}
+
+.provider_logo.selected {
+    outline: 2px solid #FFF8C6;
+}
+
+.provider_logo .provider_url {
+    display: none;
+}
+
+.signin_form {
+    clear:both;
+}
+
+.signin_form fieldset {
+    padding: 10px;
+}
+
+.signin_form input[type="text"], .signin_form input[type="password"], .signin_form input[type="submit"] {
+    height: 28px;
+    line-height: 22px;
+    font-size: 140%;
+    border: 1px solid #999;
+    padding-left:5px;
+    margin-right:5px;
+}
+
+.signin_form input[type="text"], .signin_form input[type="password"] {
+    padding-top:4px;  /* balance of alignment between firefox/safari and IE */
+}
+
+.signin_form .icon_input  {
+    padding-left: 20px;
+}
+
+.signin_form #openid_identifier {
+    padding-left: 18px;
+}
+
+.or_label {
+    margin-top: 20px;
+    margin-bottom: 10px;
+}

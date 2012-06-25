@@ -1,0 +1,8 @@
+{% load i18n %}
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+   <ShortName>{{ settings.APP_SHORT_NAME }} {% trans "Search" %}</ShortName>
+   <Description>{% trans "Search" %} {{ settings.APP_SHORT_NAME }} {% trans "using your browser." %}</Description>
+   <Tags>{{ settings.APP_KEYWORDS }}</Tags>
+   <Url type="text/html" template="{{ settings.APP_URL }}/{% trans "search" %}/?q={searchTerms}&amp;t=question"/>
+</OpenSearchDescription>

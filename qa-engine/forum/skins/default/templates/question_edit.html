@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+<!-- question_edit.html -->
+{% load i18n %}
+{% load extra_tags %}
+{% block title %}{% spaceless %}{% trans "Edit question" %}{% endspaceless %}{% endblock %}
+{% block forejs %}
+        <script type='text/javascript' src='{% media  "/media/js/wmd/showdown.js" %}'></script>
+        <script type='text/javascript' src='{% media  "/media/js/wmd/wmd.js" %}'></script>
+        <link rel="stylesheet" type="text/css" href="{% media  "/media/js/wmd/wmd.css" %}" />
+        <script type="text/javascript">
+		//todo move javascript out        
+        $().ready(function(){
+            $("#nav_questions").attr('className',"on");
+            $('#editor').TextAreaResizer();
+            
+
+            //toggle preview of editor
+            var display = true;
+            var txt = "[{% trans "hide preview" %}]";
+            $('#pre-collapse').text(txt);
+            $('#pre-collapse').bind('click', function(){
+                txt = display ? "[{% trans "show preview" %}]" : "[{% trans "hide preview" %}]";
+                display = !display;
+                $('#previewer').toggle();
+                $('#pre-collapse').text(txt);
+            });
+            
+            //Tags autocomplete action
+        	$("#id_tags").autocomplete("/matching_tags/", {
+        		matchContains: true,
+                max: 20,
+                multiple: true,
+                multipleSeparator: " ",
+                highlightItem: true,
+                scroll: true,
+                scrollHeight: 300,
+        		/*formatItem: function(row, i, max) {
+        			return row.n + " ("+ row.c +")";
+        		},
+                formatResult: function(row, i, max){
+                    return row.n;
+                }*/
+                formatItem: function(row, i, max, value) {
+                    return row[1] + " (" + row[2] + ")";
+                },
+
+                formatResult: function(row, i, max, value){
+                    return row[1];
+                }
+                
+            });         
+
+            $('#id_revision').unbind().change(function(){
+                $("#select_revision").click();
+            });
+
+            init = $("textarea#editor")[0].value;
+
+            title = $("input#id_title")[0].value;
+            body = $("textarea#editor")[0].value;
+            tag = $("input#id_tags")[0].value;
+        });
+
+        function submitClicked(e, f) {
+            if(!(browserTester('chrome') || browserTester('safari'))) {
+                $("input.submit")[0].disabled=true;
+                $("input.submit")[1].disabled=true;
+            }
+            window.removeEventListener('beforeunload', beforeUnload, true);
+            if (f) {
+                f.submit();
+            }
+        }
+
+        function beforeUnload(e) {
+            if($("input#id_title")[0].value != title || $("textarea#editor")[0].value != body || $("input#id_tags")[0].value != tag) {
+                 return yourWorkWillBeLost(e);
+            }
+        }
+        window.addEventListener('beforeunload', beforeUnload, true);
+
+        var init = "";
+        var title = "";
+        var body = "";
+        var tag = "";
+        </script>
+{% endblock %}
+        
+{% block content %}
+<div id="main-bar" class="headNormal">
+    {% block edittype %}{% trans "Edit question" %}{% endblock %} [<a href="{{ question.get_absolute_url }}">{% trans "back" %}</a>]
+</div>
+<div id="main-body" class="ask-body">
+    <div id="askform">
+        <form id="fmedit" action="" method="post" >
+            <label for="id_revision" ><strong>{% trans "revision" %}:</strong></label> <br/> 
+            {% if revision_form.revision.errors %}{{ revision_form.revision.errors.as_ul }}{% endif %}
+            <div style="vertical-align:middle">
+            {{ revision_form.revision }} <input type="submit" style="display:none" id="select_revision" name="select_revision" 
+											value="{% trans "select revision"%}">
+            </div> 
+            <div class="form-item">
+                <label for="id_title" ><strong>{{ form.title.label_tag }}:</strong></label> <span class="form-error"></span><br/> 
+                {{ form.title }} {{ form.title.errors }}  
+                <div class="title-desc">
+                    {{ form.title.help_text }}
+                </div>     
+            </div>
+            <div class="form-item">
+                <div id="wmd-button-bar" class="wmd-panel"></div>
+                {{ form.text }}
+                <span class="form-error"></span>
+                <div class="preview-toggle">
+                    <table width="100%">
+                        <tr>
+                            <td>
+                                <span id="pre-collapse" title="{% trans "Toggle the real time Markdown editor preview" %}">{% trans "toggle preview" %}</span>
+                            </td>
+                            <td style="text-align: right;" id="editor-metrics"></td>
+                            {% if settings.WIKI_ON %}
+                            <td style="text-align:right;">
+                                {{ form.wiki }} <span style="color:#000;cursor:help" title="{{form.wiki.help_text}}">{{ form.wiki.label_tag }} </span>
+                            </td>
+                            {% endif %}
+                        </tr>
+                    
+                    </table>   
+                </div>
+                <div id="previewer" class="wmd-preview"></div>
+            </div>
+            <div class="form-item">
+                <strong>{{ form.tags.label_tag }}:</strong> <span class="form-error"></span><br/>
+                {{ form.tags }}  {{ form.tags.errors }}
+                <div class="title-desc">
+                    {{ form.tags.help_text }}
+                </div>
+            </div>
+            <strong>{{ form.summary.label_tag }}</strong> <br/>
+            {{ form.summary }}  {{ form.summary.errors }}
+            <div class="title-desc">
+                {{ form.summary.help_text }}
+            </div>
+            
+            {% if form.recaptcha %}
+            <div class="question-captcha" style="float: left">
+            	{{ form.recaptcha.errors }}
+            	{{ form.recaptcha }}
+            </div>
+            <div class="clear"></div>
+            {% endif %}
+            
+            <div class="error" ></div>
+            <input type="button" value="{% trans "Save edit" %}" class="submit" onclick="submitClicked(event, this.form)" />
+            <input type="button" value="{% trans "Cancel" %}" class="submit" onclick="submitClicked(event, null); history.back(-1);" />
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block sidebar %}
+{% include "question_edit_tips.html" %}
+{% endblock %}
+
+{% block endjs %}
+{% endblock %}
+<!-- end question_edit.html -->

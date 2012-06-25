@@ -1,0 +1,47 @@
+{% load extra_filters %}
+{% load extra_tags %}
+{% load email_tags %}
+{% load i18n %}
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <style type="text/css">
+            body {
+                background: #FFF;
+                font-size: 12px;
+                line-height: 150%;
+                margin: 0;
+                padding: 0;
+                color: #000;
+                font-family: sans-serif;
+            }
+
+            #wrapper {
+                width: 600px;
+                margin: auto;
+                padding: 0;
+            }
+
+            a img {
+                border: none;
+            }
+        </style>
+    </head>
+    <body>
+        <a href="{% fullurl index %}">
+            <img src="cid:logo" title="{% trans "home" %}" alt="{{settings.APP_TITLE}} logo"/>
+        </a>
+        <br />
+        <p>{{ settings.APP_TITLE }}</p>
+    <br /><br />
+    <div id="wrapper">
+            <div id="room">
+                <div id="CALeft">
+                    {% block content%}
+                    {% endblock%}
+                </div>
+            </div>
+            <div class="spacer3"></div>
+        </div>
+    </body>
+</html>

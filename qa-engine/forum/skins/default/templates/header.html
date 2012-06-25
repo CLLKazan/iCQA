@@ -1,0 +1,47 @@
+<!-- template header.html -->
+{% load extra_tags ui_registry i18n extra_filters markup %}
+
+	<div id="roof">
+	  
+		<div id="logo">
+			<a href="{% url index %}">
+				<img src="{{ settings.APP_LOGO }}" title="{% trans "back to home page" %}" alt="{{settings.APP_TITLE}} logo"/>
+			</a>
+		</div>
+	  
+		<div id="top">
+		    {% loadregistry header_links %}{% endloadregistry %}
+		</div>
+
+    <div id="nav">
+        {% loopregistry page_top_tabs %}{% spaceless %}
+            <a id="nav_{{ tab_name }}"{% ifequal tab tab_name %} class="on"{% endifequal %} href="{{ tab_url }}" >{{ tab_title }}</a>
+        {% endspaceless %}{% endloopregistry %}
+        <a id="nav_ask" href="{% url ask %}" class="special">{% trans "ask a question" %}</a>
+    </div>
+  </div>
+
+  <div class="clear"></div>
+  
+	<div id="searchBar">
+    <form action="{% url search %}" method="get">
+        <div>
+            <input type="text" class="searchInput" value="{{ keywords }}" name="q" id="keywords" />
+            <input type="submit" name="Submit" value="{% trans "search" %}" class="searchBtn" />
+        </div>
+        <div class="options">
+            <input id="type-question" type="radio" value="question" name="t" 
+                checked="checked" /><label for="type-question">{% trans "questions" %}</label>
+            <input id="type-tag" type="radio" value="tag" name="t" /><label for="type-tag">{% trans "tags" %}</label>
+            <input id="type-user" type="radio" value="user" name="t" /><label for="type-user">{% trans "users" %}</label>
+        </div>
+    </form>	
+	</div>
+
+	{% if settings.USE_ANNOUNCEMENT_BAR|or_preview:request %}
+  <div id="announcement">
+      {{ settings.ANNOUNCEMENT_BAR|or_preview:request|static_content:settings.ANNOUNCEMENT_BAR_RENDER_MODE }}
+  </div>
+  {% endif %}
+
+<!-- end template header.html -->

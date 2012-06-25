@@ -1,0 +1,34 @@
+{% load i18n extra_tags email_tags %}
+
+{% declare %}
+    prefix = html.mark_safe(settings.EMAIL_SUBJECT_PREFIX)
+    app_name = settings.APP_SHORT_NAME
+    safe_app_name = html.mark_safe(settings.APP_SHORT_NAME)
+    app_url = settings.APP_URL
+    newmember_name = newmember.username
+    safe_newmember_name = html.mark_safe(newmember.username)
+    newmember_url = newmember.get_profile_url()
+    newmember_link = html.objlink(newmember, style=settings.EMAIL_ANCHOR_STYLE)
+{% enddeclare %}
+
+{% email %}
+    {% subject %}{% blocktrans %}{{ prefix }} {{ safe_newmember_name }} is a new member on {{ safe_app_name }}{% endblocktrans %}{% endsubject %}
+
+    {% htmlcontent notifications/base.html %}
+        <p style="{{ p_style }}">
+            {% blocktrans %}
+            {{ newmember_link }} has just joined {{ app_name }}.
+            View <a style="{{ a_style }}" href="{{ app_url }}{{ newmember_url }}">{{ newmember_name }}'s profile</a>.
+            {% endblocktrans %}
+        </p>
+    {% endhtmlcontent %}
+
+{% textcontent notifications/base_text.html %}
+{% blocktrans %}
+{{ safe_newmember_name }} has just joined {{ safe_app_name }}. You can visit {{ safe_newmember_name }}'s profile using the following url:
+{{ app_url }}{{ newmember_url }}
+{% endblocktrans %}
+{% endtextcontent %}
+
+{% endemail %}
+

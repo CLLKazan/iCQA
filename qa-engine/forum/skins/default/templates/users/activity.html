@@ -1,0 +1,12 @@
+{% load extra_tags %}
+{% load humanize %}
+{% load extra_tags %}
+
+<div class="action_container">
+    <div class="action_body">
+        {{ describe }}
+    </div>
+    <div class="action_date" style="text-align: right;">
+        {% diff_date action.action_date  %}
+    </div>
+</div>

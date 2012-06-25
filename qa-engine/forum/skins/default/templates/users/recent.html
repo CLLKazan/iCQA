@@ -1,0 +1,12 @@
+{% extends "user.html" %}
+
+{% load extra_tags %}
+{% load user_tags %}
+{% block usercontent %}
+        <div style="padding-top:5px;font-size:13px;">
+        {% for act in activities %}
+            {% activity_item act request.user %} 
+        {% endfor %}
+        </div>
+{% endblock %}
+

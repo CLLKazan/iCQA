@@ -1,0 +1,11 @@
+{% load i18n extra_tags %}
+{% spaceless %}
+{% if is_wiki %}
+    <div class="community-wiki">
+        {% blocktrans %}This {{ post_type }} is marked "community wiki".{% endblocktrans %}
+        {% if can_edit %}
+            <br />{% blocktrans %}Feel free to <a href="{{ edit_url }}">edit it</a>.{% endblocktrans %}
+        {% endif %}
+    </div>
+{% endif %}
+{% endspaceless %}

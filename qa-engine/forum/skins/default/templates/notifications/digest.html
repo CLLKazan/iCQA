@@ -1,0 +1,98 @@
+{% load i18n extra_tags email_tags %}
+
+{% declare %}
+    prefix = html.mark_safe(settings.EMAIL_SUBJECT_PREFIX)
+    app_name = settings.APP_SHORT_NAME
+    app_url = settings.APP_URL
+
+    new_member_links = html.mark_safe(", ".join([html.objlink(u, style=settings.EMAIL_ANCHOR_STYLE) for u in new_members]))
+    new_question_count = digest.count
+
+{% enddeclare %}
+
+{% email %}
+    {% subject %}{% blocktrans %}{{ prefix }} Daily digest{% endblocktrans %}{% endsubject %}
+
+    {% htmlcontent notifications/base.html %}
+        <p style="{{ p_style }}">
+            {% blocktrans %}
+            This is a brief of what's going on the {{ app_name }} community since our last update.
+            {% endblocktrans %}
+        </p>                           
+
+        {% if new_member_count %}
+        <p style="{{ p_style }}">
+        {% if show_all_users %}
+        {% blocktrans %}
+            There are {{ new_member_count }} new members in the community. {{ new_member_links }} were the most active so far.
+        {% endblocktrans %}
+        {% else %}
+        {% blocktrans %}
+            {{ new_member_links }} have joined the {{ app_name }} community.
+        {% endblocktrans %}
+        {% endif %}
+        {% endif %}
+        </p>
+
+        {% if new_question_count %}
+
+        {% declare %}
+            new_questions_link = html.hyperlink(app_url + reverse('questions') + '?sort=' + _('latest'), _('new questions'), style=a_style)
+            user_questions = digest.get_for_user(recipient)
+            subscriptions_link = html.hyperlink(app_url + recipient.get_subscribed_url(), _('subscriptions'), style=a_style)
+        {% enddeclare %}
+
+        <p style="{{ p_style }}">
+            {% blocktrans %}
+            {{ new_question_count }} {{ new_questions_link }} were posted since our last update.
+            {% endblocktrans %}
+        </p>
+
+        {% if user_questions.interesting %}
+        <p style="{{ p_style }}">
+            {% trans "We think you might like the following questions:" %}
+        </p>
+        <ul>
+        {% for q in user_questions.interesting %}
+            <li>
+                <a style="{{ a_style }}" href="{{ app_url }}{{ q.get_absolute_url  }}">{{ q.title }}</a>
+            </li>
+        {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if user_questions.may_help %}
+        <p style="{{ p_style }}">
+            {% trans "These new questions didn't get many attention from the community, but we think you may be able to help:" %}
+        </p>
+        <ul>
+        {% for q in user_questions.may_help %}
+            <li>
+                <a style="{{ a_style }}" href="{{ app_url }}{{ q.get_absolute_url  }}">{{ q.title }}</a>
+            </li>
+        {% endfor %}
+        </ul>
+
+        {% if user_questions.subscriptions %}
+        <p style="{{ p_style }}">
+            {% blocktrans %}Meanwhile, some of your {{ subscriptions_link }} have new updates since you last visited them:{% endblocktrans %}
+        </p>
+        <ul>
+        {% for q in user_questions.subscriptions %}
+            <li>
+                <a style="{{ a_style }}" href="{{ app_url }}{{ q.get_absolute_url  }}">{{ q.title }}</a>
+            </li>
+        {% endfor %}
+        </ul>
+        {% endif %}
+        
+        {% endif %}
+
+        {% endif %}
+
+    {% endhtmlcontent %}
+
+    {% textcontent notifications/base_text.html %}
+
+    {% endtextcontent %}
+{% endemail %}

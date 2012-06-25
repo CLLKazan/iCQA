@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+<!-- question_retag.html -->
+{% load extra_tags %}
+{% load i18n %}
+{% block title %}{% spaceless %}{% trans "Change tags" %}{% endspaceless %}{% endblock %}
+{% block forejs %}
+        <script type="text/javascript">
+        
+        $().ready(function(){
+            $("#nav_questions").attr('className',"on");
+            //Tags autocomplete action
+        	$("#id_tags").autocomplete("/matching_tags/", {
+                minChars: 1,
+        		matchContains: true,
+                max: 20,
+                multiple: true,
+                multipleSeparator: " ",
+        		/*formatItem: function(row, i, max) {
+        			return row.n + " ("+ row.c +")";
+        		},
+                formatResult: function(row, i, max){
+                    return row.n;
+                } */
+                formatItem: function(row, i, max, value) {
+                    return row[1] + " (" + row[2] + ")";
+                },
+
+                formatResult: function(row, i, max, value){
+                    return row[0];
+                }
+                
+            });
+           
+             $("#fmretag").validate({
+                rules: {
+        			tags: {
+        				required: true,
+        				maxength: 105
+        			}
+        		},
+                messages: {
+        			tags: {
+                        required: "{% trans "tags are required" %}",
+                        {% blocktrans with settings.FORM_MAX_NUMBER_OF_TAGS as max_number_of_tags and settings.FORM_MAX_LENGTH_OF_TAG as max_length_of_tags %}
+                        maxlength: "up to {{max_number_of_tags}} tags, less than {{max_length_of_tags}} characters each"
+                        {% endblocktrans %}
+                    }
+                }
+                
+            });
+
+        });
+        </script>
+{% endblock %}
+        
+{% block content %}
+<div id="main-bar" class="headNormal">
+    {% trans "Change tags" %} [<a href="{{ question.get_absolute_url }}">{% trans "back" %}</a>]
+</div>
+<div id="main-body" class="ask-body">
+    <div id="askform">
+        <form id="fmretag" action="{% url edit_question question.id %}" method="post" >
+            <h3>
+                {{ question.headline }}
+            </h3>
+            <div id="description" class="edit-content-html">
+                {{ question.html|safe }}
+            </div>
+           
+            
+            <div class="form-item">
+                <strong>{{ form.tags.label_tag }}:</strong> <span class="form-error"></span><br/>
+                {{ form.tags }}  {{ form.tags.errors }}
+                <div class="title-desc">
+                    {{ form.tags.help_text }}
+                </div>
+            </div>
+            <div class="error" ></div>
+            <input type="submit" value="{% trans "Save edit" %}" class="submit" />
+            <input type="button" value="{% trans "Cancel" %}" class="submit" onclick="history.back(-1);" />
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block sidebar %}
+<div class="boxC">
+    <p class="subtitle">{% trans "Why use and modify tags?" %}</p>
+    <ul class="list-item">
+        <li>
+            {% trans "tags help us keep Questions organized" %}
+        </li>
+        <li>
+            {% trans "tag editors receive special awards from the community" %}
+        </li>
+    </ul>
+    <p class='info-box-follow-up-links'>
+        <a href="{% url faq %}">faq &raquo;</a>
+    </p>
+</div>
+
+{% endblock %}
+
+{% block endjs %}
+{% endblock %}
+<!-- end question_retag.html -->

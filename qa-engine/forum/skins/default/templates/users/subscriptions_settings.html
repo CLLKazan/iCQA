@@ -1,0 +1,107 @@
+{% load i18n %}
+{% load extra_tags %}
+{% load humanize %}
+
+<h2>{% trans "Notifications and subscription settings" %}</h2>
+<p class="message">
+    {% blocktrans %}
+    Here you can decide which types of notifications you wish to receive, and their frequency.<br />
+    {% endblocktrans %}
+</p>
+<div class='inline-block'>
+<form method="POST">
+    {{ form.errors }}
+    <table class="form-as-table">
+        <tr>
+            <td colspan="2">
+                <strong>{% trans "Notify me when:" %}</strong>
+            </td>
+        </tr>
+        <tr>
+            <td>{% trans "A new member joins" %}</td>
+            <td>{{ form.member_joins }}</td>
+        </tr>
+        <tr>
+            <td>{% trans "A new question is posted" %}</td>
+            <td>{{ form.new_question }}</td>
+        </tr>
+        <tr>
+            <td>{% trans "A new question matching my interesting tags is posted" %}</td>
+            <td>{{ form.new_question_watched_tags }}</td>
+        </tr>
+        <tr>
+            <td>{% trans "There's an update on one of my subscriptions" %}</td>
+            <td >{{ form.subscribed_questions }}</td>
+        </tr>
+    </table>
+    <p>&nbsp;</p>
+    <table class="form-as-table check-table">
+        <tr>
+            <td colspan="3">
+                <strong>{% trans "Auto subscribe me to:" %}</strong>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                {{ form.questions_viewed }}{% trans "Questions I view" %}
+            </td>
+            <td>
+                {{ form.all_questions_watched_tags }}{% trans "All questions matching my interesting tags" %}
+            </td>
+            <td>
+                {{ form.all_questions }}{% trans "All questions" %}
+            </td>
+        </tr>
+    </table>
+    <p>&nbsp;</p>
+    <table class="form-as-table check-table">
+        <tr>
+            <td colspan="2">
+                <strong>{% trans "On my subscriptions, notify me when:" %}</strong>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                {{ form.notify_answers }}{% trans "An answer is posted" %}
+            </td>
+            <td>
+                {{ form.notify_comments_own_post }}{% trans "A comment on one of my posts is posted" %}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                {{ form.notify_comments }}{% trans "A comment is posted" %}
+            </td>
+            <td>
+                {{ form.notify_accepted }}{% trans "An answer is accepted" %}
+            </td>
+        </tr>
+    </table>
+    <p>&nbsp;</p>
+    <table class="form-as-table check-table">
+        <tr>
+            <td>
+                <strong>{% trans "Daily Digest:" %}</strong>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                {{ form.send_digest }}{% trans "Send me the daily digest with information about the site activity" %}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <strong>{% trans "Notify When I'm Discussed:" %}</strong>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                {{ form.notify_reply_to_comments }}{% trans "Notify me when someone replies to one of my comments on any post using the <pre>@username</pre> notation" %}
+            </td>
+        </tr>
+    </table>
+    <div class="submit-row">
+        <input type="submit" class="submit" name="save" value="{% trans "Update" %}"/>
+    </div>
+</form>
+</div>

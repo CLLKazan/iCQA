@@ -1,0 +1,35 @@
+{% load i18n %}
+<div class="boxC" id="editor_side_bar">
+    <p class="subtitle darkred">{% trans "Markdown Basics" %}</p>
+    <ul class="list-item">
+        <li>
+            {% trans "*italic* or __italic__" %}
+        </li>
+        <li>
+			{% trans "**bold** or __bold__" %}
+        </li>
+        <li>
+            <b>{% trans "link" %}</b>:[{% trans "text" %}](http://url.com/ "{% trans "title" %}")
+
+        </li>
+
+        <li>
+            <b>{% trans "image" %}</b>?![alt {% trans "text" %}](/path/img.jpg "{% trans "title" %}")
+
+        </li>
+        <li>
+			{% trans "numbered list:" %}
+            1.  Foo
+            2.  Bar
+        </li>
+        <li>
+			{% trans "to add a line break simply add two spaces to where you would like the new line to be." %}
+        </li>
+        <li>
+			{% trans "basic HTML tags are also supported" %}
+        </li>
+    </ul>
+    <p class='info-box-follow-up-links'>
+        <a href="{% url markdown_help %}" target="_blank">{% trans "learn more about Markdown" %} </a>
+    </p>
+</div>

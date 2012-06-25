@@ -1,0 +1,20 @@
+{% load i18n %}
+
+<p>
+    {%  blocktrans %}
+        An attempt has been made to send email to
+    {% endblocktrans %} {{ user.email }}.
+</p>
+
+<p>
+    {%  blocktrans %}
+        Please, check your inbox and if you see the new test message your email STMP settings are correct.
+    {% endblocktrans %}
+</p>
+
+<p>
+    {% blocktrans %}
+        If you do not see the new test message check your spam folder, and if you don't find it check your SMTP settings
+        again. It might be useful to take a look at the log file.
+    {%  endblocktrans %}
+</p>

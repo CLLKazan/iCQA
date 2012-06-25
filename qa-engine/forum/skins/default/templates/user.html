@@ -1,0 +1,39 @@
+{% extends "base_content.html" %}
+<!-- user.html -->
+{% load extra_tags %}
+{% load extra_filters %}
+{% load humanize %}
+{% load smart_if %}
+
+{% block title %}{% spaceless %}{{ page_title }}{% endspaceless %}{% endblock %}
+{% block forestyle%}
+    <style type="text/css">
+ 		.history-table td { padding: 5px; }
+ 		.user-stats-table { margin-left:50px; }
+	</style>
+{% endblock %}
+{% block forejs %}
+    {% if request.user.is_superuser or request.user == view_user %}
+        <script type="text/javascript">google.load("jquery", "1.4.2");google.load("jqueryui", "1.8.1");</script>
+        <script type="text/javascript">
+            response_commands['update_profile_karma'] = function(new_karma) {
+                $('#user-reputation').css('background', 'yellow');
+                $('#user-reputation').html(new_karma);
+                $('#user-reputation').animate({ backgroundColor: "transparent" }, 1000);
+            }
+        </script>
+
+        <link rel="stylesheet" href="http://jquery-ui.googlecode.com/svn/tags/latest/themes/base/jquery-ui.css" type="text/css" media="all" />
+        <link rel="stylesheet" href="http://static.jquery.com/ui/css/demo-docs-theme/ui.theme.css" type="text/css" media="all" />
+        <link rel="stylesheet" type="text/css" media="screen" href="{% media "/media/style/user.css" %}"/>
+    {% endif %}
+    {% block userjs %}{% endblock %}
+{% endblock %}
+{% block content %}
+    <div id="mainbar-full">
+        {% include "users/info.html" %}
+        {% include "users/tabs.html" %}
+        {% block usercontent %}
+        {% endblock %}
+	</div>
+{% endblock %}<!-- end user.html -->

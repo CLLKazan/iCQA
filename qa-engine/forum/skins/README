@@ -1,0 +1,22 @@
+this directory contains available skins
+
+1) default - default skin with templates
+2) common - this directory is to media directory common to all or many templates
+
+to create a new skin just create another directory under skins/
+and start populating it with the directory structure as in
+default/templates - templates must be named the same way
+
+NO NEED TO CREATE ALL TEMPLATES/MEDIA FILES AT ONCE
+
+templates are resolved in the following way:
+* check in skin named as in settings.OSQA_DEFAULT_SKIN
+* then skin named 'default'
+
+media is resolved with one extra option
+* settings.OSQA_DEFAULT_SKIN
+* 'default'
+* 'common'
+
+media does not have to be composed of files named the same way as in default skin
+whatever media you link to from your templates - will be in operation

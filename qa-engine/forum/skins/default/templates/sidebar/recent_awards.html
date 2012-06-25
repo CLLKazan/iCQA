@@ -1,0 +1,17 @@
+{% load i18n %}
+
+<div class="boxC">
+    <h3>{% trans "Recent awards" %}</h3>
+    <div class="body">
+         <ul class="badge-list">
+         {% for award in awards %}
+            <li>
+            <a href="{% url badges %}{{award.badge.id}}/{{award.badge.name|slugify}}" title="{{ award.badge.description }}" class="medal">
+            <span class="badge{{ award.badge.type }}">&#9679;</span>&nbsp;{{ award.badge.name }}</a>
+            <a href="{{ award.user.get_profile_url }}">{{ award.user.username }}</a>
+            </li>
+        {% endfor %}
+        </ul>
+        <div class="more"><a href="{% url badges %}">{% trans "all awards" %} </a> </div>
+     </div>
+</div>

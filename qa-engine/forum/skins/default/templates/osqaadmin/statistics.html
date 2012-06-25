@@ -1,0 +1,33 @@
+{% extends basetemplate %}
+
+{% load i18n %}
+{% load extra_tags %}
+
+{% block adminjs %}
+<script type='text/javascript' src='{% media  "/media/js/excanvas.min.js" %}'></script>
+<script type='text/javascript' src='{% media  "/media/js/jquery.flot.min.js" %}'></script>
+<script type="text/javascript">
+        $().ready(function(){
+        {% for graph in graphs %}
+            var {{ graph.id }} = {{ graph.data }};
+            var {{ graph.id }}_placeholder = $('#{{ graph.id }}');
+
+            $.plot({{ graph.id }}_placeholder, [{{ graph.id }}], {
+                xaxis: { mode: "time" },
+                points: { show: false },
+                lines: { show: true }
+            });
+        {% endfor %}
+        });
+</script>
+{% endblock %}
+
+{% block subtitle %}{% trans "Dashboard" %}{% endblock %}
+{% block pagename %}{% trans "Dashboard" %}{% endblock %}
+{% block description %}{% trans "Some simple graphics to help you get a notion of whats going on in your site." %}{% endblock %}
+
+{% block admincontent %}
+{% for graph in graphs %}
+    {% include "osqaadmin/graph.html" %}
+{% endfor %}
+{% endblock %}

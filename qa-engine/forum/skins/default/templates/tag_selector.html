@@ -1,0 +1,42 @@
+{% load i18n %}
+{% load extra_tags %}
+<div id="tagSelector" class="boxC">
+	<h3 class="subtitle">{% trans "Interesting tags" %}</h3>
+    <div class="tags interesting marked-tags">
+    {% for tag_name in interesting_tag_names %}
+        {% spaceless %}
+        <span class="deletable-tag tag-link-{{ tag }}" id="interesting-tag-{{tag_name}}">
+            <a rel="tag" 
+                title="{% blocktrans with tag as tagname %}see questions tagged '{{ tag_name }}'{% endblocktrans %}"
+                href="{% url tag_questions tag_name|urlencode %}">{{tag_name}}</a>
+            <img class="delete-icon" 
+                src="{% media  "/media/images/close-small-dark.png" %}"
+                title="{% blocktrans %}remove '{{tag_name}}' from the list of interesting tags{% endblocktrans %}"/>
+        </span>
+        {% endspaceless %}
+    {% endfor %}
+    </div>
+    <input id="interestingTagInput" autocomplete="off" type="text"/>
+    <input id="interestingTagAdd" type="submit" value="{% trans "Add" %}"/>
+	<h3 class="subtitle">{% trans "Ignored tags" %}</h3>
+    <div class="tags ignored marked-tags">
+    {% for tag_name in ignored_tag_names %}
+        {% spaceless %}
+        <span class="deletable-tag tag-link-{{ tag }}" id="ignored-tag-{{tag_name}}">
+            <a rel="tag" 
+                title="{% blocktrans with tag as tagname %}see questions tagged '{{ tag_name }}'{% endblocktrans %}"
+                href="{% url tag_questions tag_name|urlencode %}">{{tag_name}}</a>
+            <img class="delete-icon" 
+                src="{% media  "/media/images/close-small-dark.png" %}"
+                title="{% blocktrans %}remove '{{tag_name}}' from the list of ignored tags{% endblocktrans %}"/>
+        </span>
+        {% endspaceless %}
+    {% endfor %}
+    </div>
+    <input id="ignoredTagInput" autocomplete="off" type="text"/>
+    <input id="ignoredTagAdd" type="submit" value="{% trans "Add" %}"/>
+    <p id="hideIgnoredTagsControl">
+    <input id="hideIgnoredTagsCb" type="checkbox" {% if request.user.hide_ignored_questions %}checked="checked"{% endif %} />
+    <label id="hideIgnoredTagsLabel" for="hideIgnoredTagsCb">{% trans "keep ignored questions hidden" %}</label>
+    <p>
+</div>

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+{% block head %}{% endblock %}
+{% block title %}{% spaceless %}{% trans "Request temporary login key" %}{% endspaceless %}{% endblock %}
+{% block content %}
+<div class="headNormal">{% trans "Account: request temporary login key" %}</div>
+<p class="message">{% blocktrans %}
+    If you're experiencing problems accessing your account, or if you forgot your password,
+    here you can request a temporary login key. Fill out your account email and we'll send you a temporary access link that
+    will enable you to access your account. This token is valid only once and for a limited period of time.
+ {% endblocktrans %}</p>
+<div class="aligned">
+    {% if form.errors %}
+        <ul class="errorlist">
+            {% for error in form.errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+	{% endif %}
+	<form action="" method="post" accept-charset="utf-8">
+        <ul id="changepw-form" class="form-horizontal-rows">
+        {{form.as_ul}}
+        </ul>
+        <div class="submit-row"><input type="submit" class="submit" value="{% trans "Send link" %}" /></div>
+	</form>
+	</div>
+{% endblock %}

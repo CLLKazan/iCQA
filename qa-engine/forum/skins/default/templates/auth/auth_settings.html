@@ -1,0 +1,38 @@
+{% extends "user.html" %}
+<!-- changepw.html -->
+{% load i18n %}
+{% block head %}{% endblock %}
+{% block title %}{% spaceless %}{% trans "Authentication settings" %}{% endspaceless %}{% endblock %}
+{% block usercontent %}
+<h2>{% trans "Authentication settings" %}</h2>
+{% if auth_keys %}
+    <p class="message">{% blocktrans %}These are the external authentication providers currently associated with your account.{% endblocktrans %}</p>
+    <div>
+        {% for key in auth_keys %}
+            <p>{{ key.name }} (<a href="{% url user_remove_external_provider id=key.id %}">{% trans "remove" %}</a>)</p>
+        {% endfor %}
+    </div>
+{% endif %}
+{% if not auth_keys %}
+    <p class="message">{% blocktrans %}You currently have no external authentication provider associated with your account.{% endblocktrans %}</p>
+{% endif %}
+{% ifequal view_user request.user %}
+    <input type="button" class="submit" value="{% trans "Add new provider" %}" onclick="window.location='{% url user_add_external_provider %}'" />
+{% endifequal %}
+{% if allow_local_auth %}
+{% if has_password %}
+    <p class="message">{% blocktrans %}This is where you can change your password. Make sure you remember it!{% endblocktrans %}</p>
+{% else %}
+    <p class="message">{% blocktrans %}You can set up a password for your account, so you can login using standard username and password!{% endblocktrans %}</p>
+{% endif %}
+<div class="aligned">
+	<form action="" method="post" accept-charset="utf-8">
+        <ul id="changepw-form" class="form-horizontal-rows">
+        {{form.as_ul}}
+        </ul>
+        <div class="submit-row"><input type="submit" class="submit" value="{% if has_password %}{% trans "Change password" %}{% endif %}{% if not has_password %}{% trans "Create password" %}{% endif %}" /></div>
+	</form>
+	</div>
+{% endif %}
+{% endblock %}
+<!-- end changepw.html -->

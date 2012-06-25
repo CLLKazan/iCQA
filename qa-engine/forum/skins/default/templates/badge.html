@@ -1,0 +1,38 @@
+{% extends "base_content.html" %}
+<!-- template badge.html -->
+{% load i18n %}
+{% load extra_tags %}
+{% load user_tags %}
+{% load humanize %}
+{% block title %}{% spaceless %}{{ badge.name }} - {% trans "Badge" %}{% endspaceless %}{% endblock %}
+{% block forejs %}
+       <script type="text/javascript">
+        $().ready(function(){
+            $("#nav_badges").attr('className',"on");
+        });
+         
+        </script>
+{% endblock %}
+{% block content %}
+<div id="main-bar" class="headNormal">
+	{% trans "Badge" %}
+</div>
+<div id="main-body" style="width:100%;margin-bottom:20px">
+    <p>
+        <a href="{{badge.get_absolute_url}}" title="{{ badge.get_type_display }} : {{ badge.description }}" class="medal"><span class="badge{{ badge.type }}">&#9679;</span>&nbsp;{{ badge.name }}</a> {{ badge.description }}
+    </p>
+    <div>
+        {% if badge.awarded_count %}
+        <p style="float:left"><span class="count">{{ award_count|intcomma }}</span>
+        <strong>{% trans "The users have been awarded with badges:" %}</strong></p>
+        {% endif %}
+    </div>
+    <div id="award-list" style="clear:both;margin-left:20px;line-height:25px;">
+        {% for award in awards %}
+        <p style="width:220px;float:left">{% user_signature award.user "badges" %}<span class="tag-number"> &#215; {{ award.count|intcomma }}</span></p>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}
+<!-- end template badge.html -->

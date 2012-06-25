@@ -1,0 +1,29 @@
+{% extends "user.html" %}
+{% load i18n %}
+{% load extra_tags %}
+
+{% block usercontent %}
+    <h2>{% trans "Preferences" %}</h2>
+    <div class='inline-block'>
+    <form method="POST">
+        <p class="message">
+            {% trans "Here you can set some personal preferences." %}
+        </p>
+        {{ form.errors }}
+        <table class="form-as-table">
+            <tr>
+                <td colspan="2">
+                    <strong>{% trans "Navigation:" %}</strong>
+                </td>
+            </tr>
+            <tr>
+                <td>{{ form.sticky_sorts }}</td>
+                <td>{% trans "Allways remember the sort order I apply to the lists I view" %}</td>
+            </tr>
+        </table>
+        <div class="submit-row">
+            <input type="submit" class="submit" name="save" value="{% trans "Save" %}"/>
+        </div>
+    </form>
+    </div>
+{% endblock %}

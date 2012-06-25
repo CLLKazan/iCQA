@@ -1,0 +1,12 @@
+{% load i18n %}
+
+<a id="post-{{ post.id }}-upvote" title="{% trans "I like this post (click again to cancel)" %}"
+    class="ajax-command post-vote up {% ifequal user_vote "up" %} on{% endifequal %}"
+     href="{% url vote_post id=post.id,vote_type='up' %}" rel="nofollow"> </a>
+<div id="post-{{ post.id }}-score" class="post-score"
+    title="{% trans "current number of votes" %}">
+    {{ post.score }}
+</div>
+<a id="post-{{ post.id }}-downvote" title="{% trans "I dont like this post (click again to cancel)" %}"
+    class="ajax-command post-vote down{% ifequal user_vote "down" %} on{% endifequal %}"
+     href="{% url vote_post id=post.id,vote_type='down' %}" rel="nofollow"> </a>
