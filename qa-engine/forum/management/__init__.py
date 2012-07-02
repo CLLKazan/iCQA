@@ -35,7 +35,9 @@ def post_syncdb_callback(sender, **kwargs):
             cursor.execute(alter_table_statement)
 
         # Create tables for analytics module
-            create_table_statement = "CREATE TABLE IF NOT EXISTS analytics_authority (id INT(11) NOT NULL AUTO_INCREMENT, user_id INT(11), tag_id INT(11), score DOUBLE, PRIMARY KEY (id), KEY (user_id, tag_id));"
+            create_table_statement = """CREATE TABLE IF NOT EXISTS analytics_authority (id INT(11) NOT NULL AUTO_INCREMENT, 
+                user_id INT(11), tag_id INT(11), score DOUBLE, PRIMARY KEY (id), KEY (user_id, tag_id), 
+                FOREIGN KEY (user_id) REFERENCES forum_user(user_ptr_id), FOREIGN KEY (tag_id) REFERENCES forum_tag(id));"""
             log_status(verbosity,"Creating authority table for analytics module")
             cursor.execute(create_table_statement)
 
