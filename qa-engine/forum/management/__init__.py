@@ -34,6 +34,11 @@ def post_syncdb_callback(sender, **kwargs):
             log_status(verbosity,"Updating MySQL column with this statement: " + alter_table_statement)
             cursor.execute(alter_table_statement)
 
+        # Create tables for analytics module
+            create_table_statement = "CREATE TABLE IF NOT EXISTS analytics_authority (id INT(11) NOT NULL AUTO_INCREMENT, user_id INT(11), tag_id INT(11), score DOUBLE, PRIMARY KEY (id), KEY (user_id, tag_id));"
+            log_status(verbosity,"Creating authority table for analytics module")
+            cursor.execute(create_table_statement)
+
 def log_status(verbosity, message):
     if verbosity == 2:
         print "[DEBUG] " + str(message)
