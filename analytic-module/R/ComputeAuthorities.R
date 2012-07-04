@@ -22,8 +22,7 @@ mychannel <-
             host="localhost", password=db.configuration$password)
 
 # Retrieving all tags (categories)
-tags <- RetrieveTableFromDB(mychannel, db.configuration$name, 
-                            ".forum_tag", "id")
+tags <- GetTagsFromDB(mychannel, db.configuration$name)
 
 for (tag.id in tags) {
   # Matrix of edges
