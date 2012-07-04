@@ -24,14 +24,14 @@ mychannel <-
 # Retrieving all tags (categories)
 tags <- GetTagsFromDB(mychannel, db.configuration$name)
 
-for (tag.id in tags) {
+ComputeUsersAuthoritiesForTag <- function(tag.id) {
   # Matrix of edges
   user.matrix <- matrix(nrow=0, ncol=2)
   
   # Retrieving questions with the given tag
   questions <- GetQuestionsFromDB(mychannel, db.configuration$name, tag.id)
   
-  for (question.id in questions) {
+  UpdateMatrixForQuestion <- function(question.id) {
     answer.author <- GetQuestionAcceptedAnswerAuthor(mychannel, 
                                                      db.configuration$name, 
                                                      question.id)
@@ -44,6 +44,7 @@ for (tag.id in tags) {
       user.matrix <- rbind(user.matrix, c(question.author, answer.author))
     }
   }
+  lapply(questions, UpdateMatrixForQuestion)
   
   # Creating graph and computing authority scores
   user.graph <- graph.edgelist(user.matrix)
@@ -51,14 +52,16 @@ for (tag.id in tags) {
   
   # Retrieve all the users
   users <- GetUsersFromDB(mychannel, db.configuration$name)
-  for (user.id in users) {
+  UpdateAuthorityForUser <- function(user.id) {
     if (!is.na(score[user.id])) {
       # Update the table
       UpdateAuthorityTable(mychannel, db.configuration$name, user.id, 
                            tag.id, score[user.id])
     }
   }
+  lapply(users, UpdateAuthorityForUser)
 }
+lapply(tags, ComputeUsersAuthoritiesForTag)
 
 # Closing the connection
 dbDisconnect(mychannel)
