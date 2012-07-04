@@ -106,12 +106,24 @@ def tag(request, tag):
     except Tag.DoesNotExist:
         raise Http404
 
+    from django.db import connection, transaction
+    cursor = connection.cursor()
+    cursor.execute("SELECT user_id,score FROM analytics_authority WHERE tag_id=%s ORDER BY score DESC LIMIT 10", [tag.id])
+    row_list = cursor.fetchall()
+    user_list = []
+
+    for row in row_list:
+        user = User.objects.get(pk=row[0])
+        if (row[1] > 0):
+            user_list.append({"user": user, "score": row[1]})
+
     return question_list(request,
                          Question.objects.filter(tags=tag),
                          mark_safe(_('questions tagged <span class="tag">%(tag)s</span>') % {'tag': tag}),
                          None,
                          mark_safe(_('Questions Tagged With %(tag)s') % {'tag': tag}),
-                         False)
+                         False,
+                         additional_context={"influential": user_list, "tag": tag})
 
 @decorators.render('questions.html', 'questions', tabbed=False)
 def user_questions(request, mode, user, slug):
@@ -146,7 +158,8 @@ def question_list(request, initial,
                   page_title=_("All Questions"),
                   allowIgnoreTags=True,
                   feed_url=None,
-                  paginator_context=None):
+                  paginator_context=None,
+                  additional_context=None):
 
     questions = initial.filter_state(deleted=False)
 
@@ -174,16 +187,20 @@ def question_list(request, initial,
 
         feed_url = mark_safe(escape(request.path + "?type=rss" + req_params))
 
-    return pagination.paginated(request, ('questions', paginator_context or QuestionListPaginatorContext()), {
-    "questions" : questions.distinct(),
-    "questions_count" : questions.count(),
-    "keywords" : keywords,
-    "list_description": list_description,
-    "base_path" : base_path,
-    "page_title" : page_title,
-    "tab" : "questions",
-    'feed_url': feed_url,
-    })
+    c = {
+        "questions" : questions.distinct(),
+        "questions_count" : questions.count(),
+        "keywords" : keywords,
+        "list_description": list_description,
+        "base_path" : base_path,
+        "page_title" : page_title,
+        "tab" : "questions",
+        'feed_url': feed_url,
+    }
+    if (additional_context):
+        c.update(additional_context)
+
+    return pagination.paginated(request, ('questions', paginator_context or QuestionListPaginatorContext()), c)
 
 
 def search(request):
