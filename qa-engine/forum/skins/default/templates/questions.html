@@ -25,7 +25,7 @@
         <ul>
             <li class="thumb"><a href="{{ user.user.get_profile_url }} ">{% gravatar user.user 32 %}</a></li>
             <li><a {% if user.user.is_suspended %}class="suspended-user" {% endif %}href="{{ user.user.get_profile_url }}">{{ user.user.decorated_name }}</a></li>
-            <li>{{ user.score }}</li>
+            <li>{% get_score_badge user.user %}</li>
         </ul>
     </div>
     {% endfor %}
