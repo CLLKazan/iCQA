@@ -41,6 +41,12 @@ def post_syncdb_callback(sender, **kwargs):
             log_status(verbosity,"Creating authority table for analytics module")
             cursor.execute(create_table_statement)
 
+            create_table_statement = """CREATE TABLE IF NOT EXISTS analytics_satisfaction (id INT(11) NOT NULL AUTO_INCREMENT, 
+                node_id INT(11), score DOUBLE, PRIMARY KEY (id), UNIQUE KEY (node_id), 
+                FOREIGN KEY (node_id) REFERENCES forum_node(id));"""
+            log_status(verbosity,"Creating satisfaction table for analytics module")
+            cursor.execute(create_table_statement)
+
 def log_status(verbosity, message):
     if verbosity == 2:
         print "[DEBUG] " + str(message)
