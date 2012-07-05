@@ -7,3 +7,4 @@
 qa-engine/settings_local.py
 qa-engine/log/*
 qa-engine/cache/*
+qa-engine/build/*
