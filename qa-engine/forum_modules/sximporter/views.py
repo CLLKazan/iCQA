@@ -9,6 +9,7 @@ import os
 def sximporter(request):
     if (not User.objects.exists()) or (request.user.is_authenticated() and request.user.is_superuser):
         list = []
+        imported = []
         if request.method == "POST" and "dump" in request.FILES:
             dump = ZipFile(request.FILES['dump'])
             members = [f for f in dump.namelist() if f.endswith('.xml')]
@@ -18,7 +19,7 @@ def sximporter(request):
                 os.makedirs(extract_to)
 
             for m in members:
-                f = open(os.path.join(extract_to, m), 'w')
+                f = open(os.path.join(extract_to, m.split('/')[-1]), 'w')
                 f.write(dump.read(m))
                 f.close()
 
@@ -28,10 +29,10 @@ def sximporter(request):
             options = dict([(k, v) for k, v in request.POST.items()])
             options['authenticated_user'] = (request.user.is_authenticated() and (request.user,) or (None,))[0]
 
-            importer.sximport(extract_to, options)
+            imported = importer.sximport(extract_to, options)
 
         return render_to_response('modules/sximporter/page.html', {
-        'names': list
+        'names': list, 'imported': imported
         }, context_instance=RequestContext(request))
     else:
         return HttpResponseUnauthorized(request)

@@ -11,6 +11,7 @@
 {% endblock %}
 
 {% block admincontent %}
+    Zip-file containing <i>"users.xml", "posts.xml", "comments.xml", "votes.xml"</i> and <i>"badges.xml"</i>
     <form method="post" action="" enctype="multipart/form-data">
     <input type="file" name="dump" /><br>
     {% trans "Your user id in stack exchange" %}
@@ -21,7 +22,13 @@
 
     <input type="submit" value="submit" />
     </form>
-    {% for n in names %}
-        <p>{{ n }}</p>
-    {% endfor %}
+
+    {% if imported %}
+      <h4>Imported:</h4>
+      <ul>
+      {% for item in imported %}
+          <li>{{ item }}</li>
+      {% endfor %}
+      </ul>
+    {% endif %}
 {% endblock %}

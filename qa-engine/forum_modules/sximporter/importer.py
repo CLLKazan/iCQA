@@ -62,6 +62,8 @@ class SXTableHandler(ContentHandler):
             pass
         elif name.lower() == "row":
             self.in_row = True
+            for i in attrs.keys():
+                self.el_data[i.lower()] = attrs.get(i)
 
     def characters(self, ch):
         self.ch_data += ch
@@ -70,7 +72,7 @@ class SXTableHandler(ContentHandler):
         if name.lower() == self.fname:
             pass
         elif name.lower() == "row":
-            self.callback(self.el_data)
+            if self.el_data: self.callback(self.el_data)
 
             self.in_row = False
             del self.el_data
@@ -105,8 +107,10 @@ def readTime(ts):
     noms = msstrip.match(ts)
     if noms:
         ts = noms.group(1)
-
-    return datetime(*time.strptime(ts, '%Y-%m-%dT%H:%M:%S')[0:6])
+    try:
+        return datetime(*time.strptime(ts, '%Y-%m-%dT%H:%M:%S')[0:6])
+    except ValueError:
+        return datetime(*time.strptime(ts, '%Y-%m-%d')[0:3])
 
 #def readEl(el):
 #    return dict([(n.tagName.lower(), getText(n)) for n in el.childNodes if n.nodeType == el.ELEMENT_NODE])
@@ -116,40 +120,6 @@ def readTime(ts):
 #        yield readEl(e)
 #return [readEl(e) for e in minidom.parseString(dump.read("%s.xml" % name)).getElementsByTagName('row')]
 
-google_accounts_lookup = re.compile(r'^https?://www.google.com/accounts/')
-yahoo_accounts_lookup = re.compile(r'^https?://me.yahoo.com/a/')
-
-openid_lookups = [
-        re.compile(r'^https?://www.google.com/profiles/(?P<uname>\w+(\.\w+)*)/?$'),
-        re.compile(r'^https?://me.yahoo.com/(?P<uname>\w+(\.\w+)*)/?$'),
-        re.compile(r'^https?://openid.aol.com/(?P<uname>\w+(\.\w+)*)/?$'),
-        re.compile(r'^https?://(?P<uname>\w+(\.\w+)*).myopenid.com/?$'),
-        re.compile(r'^https?://flickr.com/(\w+/)*(?P<uname>\w+(\.\w+)*)/?$'),
-        re.compile(r'^https?://technorati.com/people/technorati/(?P<uname>\w+(\.\w+)*)/?$'),
-        re.compile(r'^https?://(?P<uname>\w+(\.\w+)*).wordpress.com/?$'),
-        re.compile(r'^https?://(?P<uname>\w+(\.\w+)*).blogspot.com/?$'),
-        re.compile(r'^https?://(?P<uname>\w+(\.\w+)*).livejournal.com/?$'),
-        re.compile(r'^https?://claimid.com/(?P<uname>\w+(\.\w+)*)/?$'),
-        re.compile(r'^https?://(?P<uname>\w+(\.\w+)*).pip.verisignlabs.com/?$'),
-        re.compile(r'^https?://getopenid.com/(?P<uname>\w+(\.\w+)*)/?$'),
-        re.compile(r'^https?://[\w\.]+/(\w+/)*(?P<uname>\w+(\.\w+)*)/?$'),
-        re.compile(r'^https?://(?P<uname>[\w\.]+)/?$'),
-        ]
-
-def final_username_attempt(sxu):
-    openid = sxu.get('openid', None)
-
-    if openid:
-        if google_accounts_lookup.search(openid):
-            return UnknownGoogleUser(sxu.get('id'))
-        if yahoo_accounts_lookup.search(openid):
-            return UnknownYahooUser(sxu.get('id'))
-
-        for lookup in openid_lookups:
-            if lookup.search(openid):
-                return lookup.search(openid).group('uname')
-
-    return UnknownUser(sxu.get('id'))
 
 class UnknownUser(object):
     def __init__(self, id):
@@ -163,15 +133,6 @@ class UnknownUser(object):
 
     def encode(self, *args):
         return self.__str__()
-
-class UnknownGoogleUser(UnknownUser):
-    def __str__(self):
-        return _("user-%(id)s (google)") % {'id': self._id}
-
-class UnknownYahooUser(UnknownUser):
-    def __str__(self):
-        return _("user-%(id)s (yahoo)") % {'id': self._id}
-
 
 class IdMapper(dict):
 
@@ -211,7 +172,7 @@ def userimport(path, options):
         create = True
         set_mapper_defaults = False
 
-        if sxu.get('id') == '-1':
+        if sxu.get('id','-1') == '-1':
             return
         #print "\n".join(["%s : %s" % i for i in sxu.items()])
 
@@ -236,38 +197,25 @@ def userimport(path, options):
             badges.update(dict([b.split('=') for b in sxbadges.split()]))
 
         if create:
-            username = unicode(sxu.get('displayname',
-                               sxu.get('displaynamecleaned', sxu.get('realname', final_username_attempt(sxu)))))[:30]
+            username = sxu.get('displayname').strip()
 
             if username in usernames:
+                username += " " + sxu.get('id')
             #if options.get('mergesimilar', False) and sxu.get('email', 'INVALID') == user_by_name[username].email:
-            #    osqau = user_by_name[username]
+            #   osqau = user_by_name[username]
             #    create = False
             #    uidmapper[sxu.get('id')] = osqau.id
-            #else:
-                inc = 0
-
-                while True:
-                    inc += 1
-                    totest = "%s %d" % (username[:29 - len(str(inc))], inc)
-
-                    if not totest in usernames:
-                        username = totest
-                        break
 
             osqau = orm.User(
                     id           = sxu.get('id'),
                     username     = username,
                     password     = '!',
-                    email        = sxu.get('email', ''),
-                    is_superuser = sxu.get('usertypeid') == '5',
-                    is_staff     = sxu.get('usertypeid') == '4',
+                    email        = sxu.get('emailhash', ''),
                     is_active    = True,
                     date_joined  = readTime(sxu.get('creationdate')),
                     last_seen    = readTime(sxu.get('lastaccessdate')),
                     about         = sxu.get('aboutme', ''),
                     date_of_birth = sxu.get('birthday', None) and readTime(sxu['birthday']) or None,
-                    email_isvalid = int(sxu.get('usertypeid')) > 2,
                     website       = sxu.get('websiteurl', ''),
                     reputation    = int(sxu.get('reputation')),
                     gold          = int(badges['1']),
@@ -309,9 +257,8 @@ def userimport(path, options):
                 else:
                     osqau.about = new_about
 
-            osqau.username = sxu.get('displayname',
-                                     sxu.get('displaynamecleaned', sxu.get('realname', final_username_attempt(sxu))))
-            osqau.email = sxu.get('email', '')
+            osqau.username = sxu.get('displayname')
+            osqau.email = sxu.get('emailhash', '')
             osqau.reputation += int(sxu.get('reputation'))
             osqau.gold += int(badges['1'])
             osqau.silver += int(badges['2'])
@@ -332,43 +279,12 @@ def userimport(path, options):
 
         usernames.append(osqau.username)
 
-        openid = sxu.get('openid', None)
-        if openid and openidre.match(openid) and (not openid in openids):
-            assoc = orm.AuthKeyUserAssociation(user=osqau, key=openid, provider="openidurl")
-            assoc.save()
-            openids.add(openid)
-
-        openidalt = sxu.get('openidalt', None)
-        if openidalt and openidre.match(openidalt) and (not openidalt in openids):
-            assoc = orm.AuthKeyUserAssociation(user=osqau, key=openidalt, provider="openidurl")
-            assoc.save()
-            openids.add(openidalt)
-
-    readTable(path, "Users", callback)
+    readTable(path, "users", callback)
 
     #if uidmapper[-1] == -1:
     #    uidmapper[-1] = 1
 
     return uidmapper
-
-def tagsimport(dump, uidmap):
-
-    tagmap = {}
-
-    def callback(sxtag):
-        otag = orm.Tag(
-                id = int(sxtag['id']),
-                name = sxtag['name'],
-                used_count = int(sxtag['count']),
-                created_by_id = uidmap[sxtag.get('userid', 1)],
-                )
-        otag.save()
-
-        tagmap[otag.name] = otag
-
-    readTable(dump, "Tags", callback)
-
-    return tagmap
 
 def add_post_state(name, post, action):
     if not "(%s)" % name in post.state_string:
@@ -392,7 +308,7 @@ def remove_post_state(name, post):
             pass
     post.state_string = "".join("(%s)" % s for s in re.findall('\w+', post.state_string) if s != name)
 
-def postimport(dump, uidmap, tagmap):
+def postimport(dump, uidmap,tagmap):
     all = []
 
     def callback(sxpost):
@@ -432,7 +348,7 @@ def postimport(dump, uidmap, tagmap):
         if sxpost.get('communityowneddate', None):
             wikify_action = orm.Action(
                     action_type = "wikify",
-                    user_id = 1,
+                    user_id = uidmap[1],
                     node = post,
                     action_date = readTime(sxpost['communityowneddate'])
                     )
@@ -448,14 +364,30 @@ def postimport(dump, uidmap, tagmap):
             post.node_type = "question"
             post.title = sxpost['title']
 
-            tagnames = sxpost['tags'].replace(u'ö', '-').replace(u'é', '').replace(u'à', '')
-            post.tagnames = tagnames
+            tagnames = sxpost['tags'].replace(u'ö', '-').replace(u'é', '').replace(u'à', '')\
+              .replace('><',' ').replace('>','').replace('<','')
 
+            post.tagnames = tagnames
             post.extra_count = sxpost.get('viewcount', 0)
 
-            add_tags_to_post(post, tagmap)
+            tags = []
+            for name in tagnames.split(' '):
+                try:
+                    otag = tagmap.get(name, orm.Tag.objects.get(name = name))
+                    otag.used_count += 1
+                except orm.Tag.DoesNotExist:
+                    otag = orm.Tag(
+                      name = name,
+                      used_count = 1,
+                      created_by_id = uidmap[1]
+                    )
+                tagmap[otag.name] = otag
+                otag.save()
+                tags.append(otag)
+                
+            post.tags = tags
 
-        else:
+        elif 'parentid' in sxpost:
             post.parent_id = sxpost['parentid']
 
         post.save()
@@ -465,7 +397,7 @@ def postimport(dump, uidmap, tagmap):
 
         del post
 
-    readTable(dump, "Posts", callback)
+    readTable(dump, "posts", callback)
 
     return all
 
@@ -517,7 +449,7 @@ def comment_import(dump, uidmap, posts):
         posts.append(int(oc.id))
         mapping[int(sxc['id'])] = int(oc.id)
 
-    readTable(dump, "PostComments", callback)
+    readTable(dump, "comments", callback)
     return posts, mapping
 
 
@@ -544,18 +476,18 @@ def create_and_activate_revision(post):
     post.save()
 
 def post_vote_import(dump, uidmap, posts):
-    close_reasons = {}
+    #close_reasons = {}
 
     def close_callback(r):
         close_reasons[r['id']] = r['name']
 
-    readTable(dump, "CloseReasons", close_callback)
+    #readTable(dump, "CloseReasons", close_callback)
 
     user2vote = []
 
     def callback(sxv):
         action = orm.Action(
-                user_id=uidmap[sxv['userid']],
+                user_id=uidmap[sxv.get('userid',1)],
                 action_date = readTime(sxv['creationdate']),
                 )
 
@@ -616,7 +548,7 @@ def post_vote_import(dump, uidmap, posts):
 
         elif sxv['votetypeid'] == '6':
             action.action_type = "close"
-            action.extra = dbsafe_encode(close_reasons[sxv['comment']])
+            #action.extra = dbsafe_encode(close_reasons[sxv['comment']])
             action.save()
 
             node.marked = True
@@ -669,7 +601,7 @@ def post_vote_import(dump, uidmap, posts):
             state = {"acceptanswer": "accepted", "delete": "deleted", "close": "closed"}[action.action_type]
             add_post_state(state, node, action)
 
-    readTable(dump, "Posts2Votes", callback)
+    readTable(dump, "votes", callback)
 
 
 def comment_vote_import(dump, uidmap, comments):
@@ -715,37 +647,23 @@ def comment_vote_import(dump, uidmap, comments):
 
 def badges_import(dump, uidmap, post_list):
 
-    sxbadges = {}
-
-    def sxcallback(b):
-        sxbadges[int(b['id'])] = b
-
-    readTable(dump, "Badges", sxcallback)
-
     obadges = dict([(b.cls, b) for b in orm.Badge.objects.all()])
     user_badge_count = {}
 
-    sx_to_osqa = {}
-
-    for id, sxb in sxbadges.items():
-        cls = "".join(sxb['name'].replace('&', 'And').split(' '))
-
-        if cls in obadges:
-            sx_to_osqa[id] = obadges[cls]
-        else:
-            osqab = orm.Badge(
-                    cls = cls,
-                    awarded_count = 0,
-                    type = sxb['class']
-                    )
-            osqab.save()
-            sx_to_osqa[id] = osqab
-
     osqaawards = []
+    
+    def get_badge(name):
+        if name in obadges: return obadges[name]
+        try:
+            obadges[name] = orm.Badge.objects.get(cls = name)
+        except orm.Badge.DoesNotExist:
+            obadges[name] = None
+        return obadges[name]
 
     def callback(sxa):
-        badge = sx_to_osqa[int(sxa['badgeid'])]
-
+        badge = get_badge(sxa['name'])
+        if badge is None: return
+        
         user_id = uidmap[sxa['userid']]
         if not user_badge_count.get(user_id, None):
             user_badge_count[user_id] = 0
@@ -771,10 +689,7 @@ def badges_import(dump, uidmap, post_list):
 
         user_badge_count[user_id] += 1
 
-    readTable(dump, "Users2Badges", callback)
-
-    for badge in obadges.values():
-        badge.save()
+    readTable(dump, "badges", callback)
 
 def save_setting(k, v):
     try:
@@ -914,27 +829,39 @@ def sximport(dump, options):
     except:
         triggers_disabled = False
 
-    uidmap = userimport(dump, options)
-    tagmap = tagsimport(dump, uidmap)
-    gc.collect()
+    imported = []
 
-    posts = postimport(dump, uidmap, tagmap)
-    gc.collect()
+    try:
+        uidmap = userimport(dump, options)
+        imported.append("Users")
+    except IOError: return imported
+    
+    try:
+        tagmap = {}
+        posts = postimport(dump, uidmap, tagmap)
+        gc.collect()
+        imported.append("Posts")
+    
+        posts, comments = comment_import(dump, uidmap, posts)
+        gc.collect()
+        imported.append("Comments")
+        
+        post_vote_import(dump, uidmap, posts)
+        gc.collect()
+        #comment_vote_import(dump, uidmap, comments)
+        #gc.collect()
+        imported.append("Votes")
 
-    posts, comments = comment_import(dump, uidmap, posts)
-    gc.collect()
+        badges_import(dump, uidmap, posts)
+        imported.append("Badges")
 
-    post_vote_import(dump, uidmap, posts)
-    gc.collect()
+        #pages_import(dump, max(posts))
+        #imported.append("FlatPages")
 
-    comment_vote_import(dump, uidmap, comments)
-    gc.collect()
-
-    badges_import(dump, uidmap, posts)
-
-    pages_import(dump, max(posts))
-    static_import(dump)
-    gc.collect()
+        #static_import(dump)
+        #imported.append("ThemeTextResources")
+        gc.collect()
+    except IOError: pass
 
     from south.db import db
     db.commit_transaction()
@@ -944,6 +871,8 @@ def sximport(dump, options):
     if triggers_disabled:
         enable_triggers()
         reindex_fts()
+    
+    return imported
 
 
 PG_DISABLE_TRIGGERS = """
@@ -1024,6 +953,3 @@ SELECT setval('"forum_openidnonce_id_seq"', coalesce(max("id"), 1) + 2, max("id"
 SELECT setval('"forum_openidassociation_id_seq"', coalesce(max("id"), 1) + 2, max("id") IS NOT null) FROM "forum_openidassociation";
 """
 
-
-    
-    
