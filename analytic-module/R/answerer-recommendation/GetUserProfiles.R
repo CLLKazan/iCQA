@@ -15,6 +15,8 @@ GetUserProfiles <- function(db.channel, db.name) {
                       db.name, ".forum_node GROUP BY author_id"))
   data <- fetch(results, n=-1)
   names(data)[2] <- "profile"
+  # Strips the HTML and LaTeX markups
   data$profile <- gsub("<(.|\n)*?>","", data$profile)
+  data$profile <- gsub("\\$.[^$]*\\$","", data$profile)
   data
 }
