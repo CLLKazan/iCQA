@@ -23,11 +23,7 @@ mychannel <-
 
 # Retrieving all tags (categories)
 tags <- GetTagsFromDB(mychannel, db.configuration$name)
-
 ComputeUsersAuthoritiesForTag <- function(tag.id) {
-  # Matrix of edges
-  user.matrix <- matrix(nrow=0, ncol=2)
-  
   # Retrieving questions with the given tag
   questions <- GetQuestionsFromDB(mychannel, db.configuration$name, tag.id)
   
@@ -40,12 +36,16 @@ ComputeUsersAuthoritiesForTag <- function(tag.id) {
                                          question.id)
     # If accepted answer exists
     if (!is.null(answer.author)) {
-      # Add edge to the matrix
-      user.matrix <- rbind(user.matrix, c(question.author, answer.author))
+      result <- c(question.author, answer.author)
+    } else {
+      result <- NULL
     }
+    result
   }
-  lapply(questions, UpdateMatrixForQuestion)
-  
+  #matrix of edges
+  user.matrix <- matrix(unlist(sapply(questions, UpdateMatrixForQuestion)), 
+                       ncol=2, byrow=TRUE)
+
   # Creating graph and computing authority scores
   user.graph <- graph.edgelist(user.matrix)
   score <- authority.score(user.graph)$vector
@@ -53,7 +53,7 @@ ComputeUsersAuthoritiesForTag <- function(tag.id) {
   # Retrieve all the users
   users <- GetUsersFromDB(mychannel, db.configuration$name)
   UpdateAuthorityForUser <- function(user.id) {
-    if (!is.na(score[user.id])) {
+    if (!is.na(score[user.id]) & score[user.id] > 0) {
       # Update the table
       UpdateAuthorityTable(mychannel, db.configuration$name, user.id, 
                            tag.id, score[user.id])
