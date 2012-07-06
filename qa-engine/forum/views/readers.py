@@ -108,7 +108,7 @@ def tag(request, tag):
 
     from django.db import connection, transaction
     cursor = connection.cursor()
-    cursor.execute("SELECT user_id,score FROM analytics_authority WHERE tag_id=%s ORDER BY score DESC LIMIT 10", [tag.id])
+    cursor.execute("SELECT user_id,score FROM analytics_authority WHERE tag_id=%s ORDER BY score DESC LIMIT 12", [tag.id])
     row_list = cursor.fetchall()
     user_list = []
 
