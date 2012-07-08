@@ -2,9 +2,9 @@
 
 # Script for computing answerer recommendations per each question
 
-library("RMySQL")
-library("R.utils")
-library(RTextTools)
+library(RMySQL)
+library(R.utils)
+library(tm)
 
 # Loading auxiliary functions
 sourceDirectory(paste(Sys.getenv("CQA_HOME"),
@@ -23,8 +23,10 @@ channel <-
 questions <- GetQuestions(channel,db.configuration$name)
 # Retrieving all answers
 answers <- GetAnswers(channel,db.configuration$name)
-
+# Retrieving user profiles
 user.profiles <- GetUserProfiles(channel,db.configuration$name)
+
+uqa.model <- TrainUQA(channel,db.configuration$name, user.profiles)
 
 # Closing the connection
 dbDisconnect(channel)

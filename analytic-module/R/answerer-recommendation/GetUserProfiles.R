@@ -3,20 +3,33 @@ GetUserProfiles <- function(db.channel, db.name) {
   # from the given database connection
   #
   # Args:
-  #   db.channel: db connection object
+  #   db.channel: database connection object
+  #   db.name:    database name
   #
   # Returns:
   #   Frame, containing user profile data
   require(RMySQL)
-  results <- 
+  questions <- 
     dbSendQuery(db.channel,
-                paste("SELECT author_id as user_id,
-                      GROUP_CONCAT(body SEPARATOR '') FROM ", 
-                      db.name, ".forum_node GROUP BY author_id"))
-  data <- fetch(results, n=-1)
-  names(data)[2] <- "profile"
+                paste("SELECT t1.author_id as user_id, min(t2.tag_id) as tag_id,
+                t1.body as post FROM ", 
+                      db.name, ".forum_node t1 LEFT JOIN ", db.name,
+                      ".forum_node_tags t2 ON t1.id=t2.node_id
+                      WHERE t1.node_type = 'question' GROUP BY user_id"))
+  data <- fetch(questions, n=-1)
+  answers <- 
+    dbSendQuery(db.channel,
+                paste("SELECT t1.author_id as user_id, min(t2.tag_id) as tag_id,
+                t1.body as post FROM ", 
+                      db.name, ".forum_node t1 LEFT JOIN ", db.name,
+                      ".forum_node_tags t2 ON t1.parent_id=t2.node_id
+                      WHERE t1.node_type = 'answer' GROUP BY user_id"))
+  answer.data <- fetch(answers, n=-1)
+  data <- rbind(data, answer.data)
   # Strips the HTML and LaTeX markups
-  data$profile <- gsub("<(.|\n)*?>","", data$profile)
-  data$profile <- gsub("\\$.[^$]*\\$","", data$profile)
+  data$post <- gsub("<(.|\n)*?>","", data$post)
+  data$post <- gsub("\\$.[^$]*\\$","", data$post)
+  data$post <- gsub("[^[:alpha:] ,.!?-]", "", data$post)
+  row.names(data) <- 1:length(data$user_id)
   data
 }
