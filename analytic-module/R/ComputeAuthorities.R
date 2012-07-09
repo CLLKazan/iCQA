@@ -38,28 +38,34 @@ ComputeUsersAuthoritiesForTag <- function(tag.id) {
     if (!is.null(answer.author)) {
       result <- c(question.author, answer.author)
     } else {
-      result <- NULL
+      result <- c(NA, NA)
     }
     result
   }
   #matrix of edges
-  user.matrix <- matrix(unlist(sapply(questions, UpdateMatrixForQuestion)), 
-                       ncol=2, byrow=TRUE)
-
-  # Creating graph and computing authority scores
-  user.graph <- graph.edgelist(user.matrix)
-  score <- authority.score(user.graph)$vector
-  
-  # Retrieve all the users
-  users <- GetUsersFromDB(mychannel, db.configuration$name)
-  UpdateAuthorityForUser <- function(user.id) {
-    if (!is.na(score[user.id]) & score[user.id] > 0) {
-      # Update the table
-      UpdateAuthorityTable(mychannel, db.configuration$name, user.id, 
-                           tag.id, score[user.id])
+  list <- lapply(questions, UpdateMatrixForQuestion)
+  data <- unlist(list)
+  if(!is.null(data)) {
+    user.matrix <- na.omit(matrix(data, ncol=2, byrow=TRUE))
+    
+    # Creating graph and computing authority scores
+    user.graph <- graph.edgelist(user.matrix)
+    score <- authority.score(user.graph)$vector
+    
+    users <- seq(length=length(score))
+    score.frame <- data.frame(score, users)
+    ordered.score.frame <- score.frame[-order(score.frame$score),]
+    
+    UpdateAuthorityForUser <- function(user.id) {
+      if (!is.na(score[user.id])) {
+        # Update the table
+        UpdateAuthorityTable(mychannel, db.configuration$name, user.id, 
+                             tag.id, score[user.id])
+      }
     }
+    # Write score only of 12 top users
+    lapply(ordered.score.frame[1:12,]$users, UpdateAuthorityForUser)
   }
-  lapply(users, UpdateAuthorityForUser)
 }
 lapply(tags, ComputeUsersAuthoritiesForTag)
 
