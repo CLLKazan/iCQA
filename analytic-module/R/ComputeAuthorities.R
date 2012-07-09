@@ -23,29 +23,41 @@ mychannel <-
 
 # Retrieving all tags (categories)
 tags <- GetTagsFromDB(mychannel, db.configuration$name)
-ComputeUsersAuthoritiesForTag <- function(tag.id) {
-  # Retrieving questions with the given tag
-  questions <- GetQuestionsFromDB(mychannel, db.configuration$name, tag.id)
-  
-  UpdateMatrixForQuestion <- function(question.id) {
-    answer.author <- GetQuestionAcceptedAnswerAuthor(mychannel, 
-                                                     db.configuration$name, 
-                                                     question.id)
-    question.author <- GetQuestionAuthor(mychannel, 
-                                         db.configuration$name, 
-                                         question.id)
-    # If accepted answer exists
-    if (!is.null(answer.author)) {
-      result <- c(question.author, answer.author)
-    } else {
-      result <- c(NA, NA)
-    }
-    result
+
+UpdateAuthorityForUser <- function(user.id, db.channel, db.name, 
+                                   tag.id, score) {
+  if (!is.na(score[user.id])) {
+    # Update the table
+    UpdateAuthorityTable(db.channel, db.name, user.id, 
+                         tag.id, score[user.id])
   }
-  #matrix of edges
-  list <- lapply(questions, UpdateMatrixForQuestion)
+}
+
+UpdateMatrixForQuestion <- function(question.id, db.channel, db.name) {
+  answer.author <- GetQuestionAcceptedAnswerAuthor(db.channel, 
+                                                   db.name, 
+                                                   question.id)
+  question.author <- GetQuestionAuthor(db.channel, 
+                                       db.name, 
+                                       question.id)
+  # If accepted answer exists
+  if (!is.null(answer.author)) {
+    result <- c(question.author, answer.author)
+  } else {
+    result <- c(NA, NA)
+  }
+  result
+}
+
+ComputeUsersAuthoritiesForTag <- function(tag.id, db.channel, db.name) {
+  # Retrieving questions with the given tag
+  questions <- GetQuestionsFromDB(db.channel, db.name, tag.id)
+  
+  list <- lapply(questions, UpdateMatrixForQuestion, db.channel=db.channel, 
+                 db.name=db.name)
   data <- unlist(list)
   if(!is.null(data)) {
+    # Matrix of edges
     user.matrix <- na.omit(matrix(data, ncol=2, byrow=TRUE))
     
     # Creating graph and computing authority scores
@@ -55,19 +67,15 @@ ComputeUsersAuthoritiesForTag <- function(tag.id) {
     users <- seq(length=length(score))
     score.frame <- data.frame(score, users)
     ordered.score.frame <- score.frame[-order(score.frame$score),]
-    
-    UpdateAuthorityForUser <- function(user.id) {
-      if (!is.na(score[user.id])) {
-        # Update the table
-        UpdateAuthorityTable(mychannel, db.configuration$name, user.id, 
-                             tag.id, score[user.id])
-      }
-    }
+        
     # Write score only of 12 top users
-    lapply(ordered.score.frame[1:12,]$users, UpdateAuthorityForUser)
+    lapply(ordered.score.frame[1:12,]$users, UpdateAuthorityForUser, 
+           db.channel=db.channel, db.name=db.name, 
+           tag.id=tag.id, score=score)
   }
 }
-lapply(tags, ComputeUsersAuthoritiesForTag)
+lapply(tags, ComputeUsersAuthoritiesForTag, db.channel=mychannel, 
+       db.name=db.configuration$name)
 
 # Closing the connection
 dbDisconnect(mychannel)
