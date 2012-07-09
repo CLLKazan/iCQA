@@ -26,7 +26,7 @@ tags <- GetTagsFromDB(mychannel, db.configuration$name)
 
 UpdateAuthorityForUser <- function(user.id, db.channel, db.name, 
                                    tag.id, score) {
-  if (!is.na(score[user.id])) {
+  if (!is.na(score[user.id]) & score[user.id] > 0.000001) {
     # Update the table
     UpdateAuthorityTable(db.channel, db.name, user.id, 
                          tag.id, score[user.id])
@@ -66,8 +66,8 @@ ComputeUsersAuthoritiesForTag <- function(tag.id, db.channel, db.name) {
     
     users <- seq(length=length(score))
     score.frame <- data.frame(score, users)
-    ordered.score.frame <- score.frame[-order(score.frame$score),]
-        
+    ordered.score.frame <- score.frame[order(-score.frame$score),]
+    
     # Write score only of 12 top users
     lapply(ordered.score.frame[1:12,]$users, UpdateAuthorityForUser, 
            db.channel=db.channel, db.name=db.name, 
