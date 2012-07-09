@@ -1,10 +1,12 @@
-AverageAnswerNumberForUser <- function(db.channel, db.name, user.id) {
+AverageAnswerNumberForUser <- function(db.channel, db.name, user.id, 
+                                       date=NULL) {
   # Retrieves average number of answers to user's questions
   #
   # Args:
   #   db.channel: db connection object
   #   db.name:    name of the database
   #   user.id:    user id
+  #   date:       the average will be computed for this point in time
   #
   # Returns:
   #   Average number of answers to user's questions if user exists, 

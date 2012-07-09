@@ -1,4 +1,4 @@
-AverageAnswerNumberForTag <- function(db.channel, db.name, tag.id) {
+AverageAnswerNumberPerHourForTag <- function(db.channel, db.name, tag.id) {
   # Retrieves average number of answers per hour in this category
   #
   # Args:
