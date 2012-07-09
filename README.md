@@ -16,6 +16,11 @@ icqa@googlegroups.com
 
 https://groups.google.com/d/forum/icqa
 
+Continuous Integration
+----------------------
+
+See our [Jenkins CI server instance](http://cll.niimm.ksu.ru/jenkins/job/iCQA)
+
 License
 ---------------------
 
