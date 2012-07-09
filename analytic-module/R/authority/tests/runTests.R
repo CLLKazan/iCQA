@@ -1,21 +1,15 @@
-#!/usr/bin/env Rscript
-
-# Script for computing authority score for all the users in
-# each category (tag)
 
 library("RMySQL")
 library("R.utils")
 library("igraph")
+library("authority")
 
 # Loading auxiliary functions
 sourceDirectory(paste(Sys.getenv("CQA_HOME"),
                       "/analytic-module/R/common",
                       sep=""), pattern="*.R")
-sourceDirectory(paste(Sys.getenv("CQA_HOME"),
-                      "/analytic-module/R/authority/R",
-                      sep=""), pattern="*.R")
 
-# Creating connection to database
+sink("/dev/null")                      
 db.configuration <- ReadDBConfiguration()
 mychannel <- 
   dbConnect(MySQL(), user=db.configuration$user,
@@ -29,3 +23,6 @@ lapply(tags[1:2], ComputeUsersAuthoritiesForTag, db.channel=mychannel,
 
 # Closing the connection
 dbDisconnect(mychannel)
+
+sink()
+2+2
