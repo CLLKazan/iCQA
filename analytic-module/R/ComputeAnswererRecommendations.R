@@ -11,7 +11,7 @@ sourceDirectory(paste(Sys.getenv("CQA_HOME"),
                       "/analytic-module/R/common",
                       sep=""), pattern="*.R")
 sourceDirectory(paste(Sys.getenv("CQA_HOME"),
-                      "/analytic-module/R/answerer-recommendation",
+                      "/analytic-module/R/answerer-recommendation/R",
                       sep=""), pattern="*.R")
 
 # Creating connection to database

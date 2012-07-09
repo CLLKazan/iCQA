@@ -43,13 +43,17 @@ BuildTopicWordAssignments <- function(user, dtm, user.profiles, topic.number) {
 BuildTuples <- function(id, dtm, user.profiles, user,topic.number) {
     category.id <- user.profiles$tag_id[id]  
     terms <- tm::findFreqTerms(dtm[id,],1)
-    
+    result <- NULL
+    if (length(terms) > 0) {
     topic.word.assignments <-
       ldply(terms, function(term) {c(user,
                                      term,
                                      category.id,
                                      sample(1:topic.number,1,T))})   
     df <- as.data.frame(topic.word.assignments)
+    
     names(df) <- c("user_id", "word", "category_id", "topic_id")  
-    return (df)
+    result <- df
+    }
+    return (result)
 }
