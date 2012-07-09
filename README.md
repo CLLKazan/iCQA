@@ -19,7 +19,7 @@ https://groups.google.com/d/forum/icqa
 Continuous Integration
 ----------------------
 
-See our [Jenkins CI server instance](http://cll.niimm.ksu.ru/jenkins/job/iCQA)
+See our [Jenkins CI server instance](http://cll.niimm.ksu.ru:8080/jenkins/job/iCQA)
 
 License
 ---------------------
