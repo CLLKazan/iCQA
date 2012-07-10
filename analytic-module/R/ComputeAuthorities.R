@@ -18,14 +18,13 @@ sourceDirectory(paste(Sys.getenv("CQA_HOME"),
 # Creating connection to database
 db.configuration <- ReadDBConfiguration()
 mychannel <- 
-  dbConnect(MySQL(), user=db.configuration$user,
+  dbConnect(MySQL(), user=db.configuration$user, dbname=db.configuration$name,
             host="localhost", password=db.configuration$password)
 
 # Retrieving all tags (categories)
-tags <- GetTagsFromDB(mychannel, db.configuration$name)
+tags <- GetTagsFromDB(mychannel)
 
-lapply(tags[1:2], ComputeUsersAuthoritiesForTag, db.channel=mychannel, 
-       db.name=db.configuration$name)
+lapply(tags, ComputeUsersAuthoritiesForTag, db.channel=mychannel)
 
 # Closing the connection
 dbDisconnect(mychannel)
