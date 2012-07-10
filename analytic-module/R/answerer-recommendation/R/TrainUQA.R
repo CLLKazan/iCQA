@@ -36,9 +36,10 @@ TrainUQA <- function(db.channel, db.name, user.profiles) {
                                       word.topic.frequencies,
                                       category.topic.frequencies,
                                       user.topic.frequencies,
-                                      topic.word.assignments)})  
+                                      topic.word.assignments,
+                                      topic.number)})  
 
-  return (word.topic.frequencies)
+  return (topic.word.assignments)
 }
 
 BuildTopicWordAssignments <- function(user, dtm, user.profiles, topic.number) {
@@ -72,7 +73,8 @@ ProcessAssignment <- function(assignment,
                               word.topic.frequencies,
                               category.topic.frequencies,
                               user.topic.frequencies,
-                              topic.word.assignments) {
+                              topic.word.assignments,
+                              topic.number) {
   # Decreases the related frequencies
   word.topic.freq <- with(word.topic.frequencies,
                   word.topic.frequencies[which(word_id==assignment$word_id && 
@@ -94,7 +96,15 @@ ProcessAssignment <- function(assignment,
   if (nrow(user.topic.freq) && user.topic.freq$Freq > 0) {
     user.topic.freq$Freq <- user.topic.freq$Freq - 1
   }
-      
+  t <- with(topic.word.assignments, topic.word.assignments[
+    which(user_id==assignment$user_id && topic_id==assignment$topic_id),])
+  l.uz.ui <- nrow(t)
+  t <- with(topic.word.assignments, topic.word.assignments[
+    which(user_id==assignment$user_id && word_id==assignment$word_id && 
+      topic_id==assignment$topic_id),])
+  n.z.ui.w.ui <- nrow(t)
+  
+#   (l.uz.ui + 50/topic.number - 1)*(n.z.ui.w.ui + .05 - 1)/()
 }
 # ComputeTopicProbability <- function() {
 #   (user.topic.frequencies[assignment$user_id, assignment$topic_id] +
