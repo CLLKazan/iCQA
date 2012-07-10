@@ -17,5 +17,5 @@ test_ComputeUsersAuthoritiesForTag <- function(){
   
   dbDisconnect(mychannel)
   
-  checkTrue(F)
+  checkEquals(data,data_original)
 }
