@@ -477,6 +477,8 @@ def create_and_activate_revision(post):
 
 def post_vote_import(dump, uidmap, posts):
 
+    user2vote = []
+
     def callback(sxv):
         action = orm.Action(
                 user_id=uidmap[sxv.get('userid',1)],
@@ -502,17 +504,20 @@ def post_vote_import(dump, uidmap, posts):
             question.save()
 
         elif sxv['votetypeid'] in ('2', '3'):
-              action.action_type = (sxv['votetypeid'] == '2') and "voteup" or "votedown"
-              action.save()
+            if not (action.node.id, action.user_id) in user2vote:
+                user2vote.append((action.node.id, action.user_id))
 
-              ov = orm.Vote(
-                      node_id = action.node.id,
-                      user_id = action.user_id,
-                      voted_at = action.action_date,
-                      value = sxv['votetypeid'] == '2' and 1 or -1,
-                      action = action
-                      )
-              ov.save()
+                ov = orm.Vote(
+                        node_id = action.node.id,
+                        user_id = action.user_id,
+                        voted_at = action.action_date,
+                        value = sxv['votetypeid'] == '2' and 1 or -1,
+                        action = action
+                        )
+                ov.save()
+            
+            action.action_type = (sxv['votetypeid'] == '2') and "voteup" or "votedown"
+            action.save()
 
         elif sxv['votetypeid'] in ('4', '12', '13'):
             action.action_type = "flag"
