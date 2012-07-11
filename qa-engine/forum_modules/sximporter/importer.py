@@ -476,14 +476,6 @@ def create_and_activate_revision(post):
     post.save()
 
 def post_vote_import(dump, uidmap, posts):
-    #close_reasons = {}
-
-    def close_callback(r):
-        close_reasons[r['id']] = r['name']
-
-    #readTable(dump, "CloseReasons", close_callback)
-
-    user2vote = []
 
     def callback(sxv):
         action = orm.Action(
@@ -510,23 +502,17 @@ def post_vote_import(dump, uidmap, posts):
             question.save()
 
         elif sxv['votetypeid'] in ('2', '3'):
-            if not (action.node.id, action.user_id) in user2vote:
-                user2vote.append((action.node.id, action.user_id))
+              action.action_type = (sxv['votetypeid'] == '2') and "voteup" or "votedown"
+              action.save()
 
-                action.action_type = (sxv['votetypeid'] == '2') and "voteup" or "votedown"
-                action.save()
-
-                ov = orm.Vote(
-                        node_id = action.node.id,
-                        user_id = action.user_id,
-                        voted_at = action.action_date,
-                        value = sxv['votetypeid'] == '2' and 1 or -1,
-                        action = action
-                        )
-                ov.save()
-            else:
-                action.action_type = "unknown"
-                action.save()
+              ov = orm.Vote(
+                      node_id = action.node.id,
+                      user_id = action.user_id,
+                      voted_at = action.action_date,
+                      value = sxv['votetypeid'] == '2' and 1 or -1,
+                      action = action
+                      )
+              ov.save()
 
         elif sxv['votetypeid'] in ('4', '12', '13'):
             action.action_type = "flag"
