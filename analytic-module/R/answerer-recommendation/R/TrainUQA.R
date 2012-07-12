@@ -13,12 +13,15 @@ TrainUQA <- function(db.channel, db.name, user.profiles) {
   require(tm)
   require(plyr)
   require(foreach)
-  topic.number <- 5*length(unique(user.profiles$tag_id))
+  # TODO(nzhiltsov): calculate the topic number optimally
+  topic.number <- 3*length(unique(user.profiles$tag_id))
   # Building the document-term matrix
   corpus <- tm::Corpus(VectorSource(user.profiles$post))
   dtm <- 
     tm::DocumentTermMatrix(corpus, control=list(removePunctuation=T, stopwords=T))
-  users <- unique(user.profiles$user_id)[10]
+  # TODO(nzhiltsov): the number of users is temporarily reduced; 
+  # remove '[...]' in the end!
+  users <- unique(user.profiles$user_id)[1:2]
   topic.word.assignments <- ldply(users, 
                                   function(u) 
                                 {BuildTopicWordAssignments(u,
@@ -43,7 +46,8 @@ TrainUQA <- function(db.channel, db.name, user.profiles) {
                                     topic.word.assignments$topic_id),
                                   nrow)
   names(user.topic.frequencies) <- c("user_id", "topic_id", "Freq")
-  category.number <- length(unique(category.topic.frequencies$category_id))
+  
+  category.number <- length(unique(topic.word.assignments$category_id))
   # Processes assignments
   by(topic.word.assignments,  1:nrow(topic.word.assignments),
         function(row) {ProcessAssignment(row,
@@ -53,8 +57,11 @@ TrainUQA <- function(db.channel, db.name, user.profiles) {
                                       topic.word.assignments,
                                       topics,
                                       category.number)}, simplify=T)  
-
-  return (topic.word.assignments)
+  # Estimates the parameters
+  theta.parameters <- ComputeThetaParameters(topic.word.assignments,
+                         users, 
+                         topics)  
+  return (theta.parameters)
 }
 
 BuildTopicWordAssignments <- function(user, dtm, user.profiles, topic.number) {
@@ -123,16 +130,25 @@ ProcessAssignment <- function(assignment,
                                                          topic,
                                                          category.number,
                                                          topic.number)})
-#   print(topic.number)
   topic.probabilities <- unlist(topic.probabilities)
-#   print(topic.probabilities)
   sampled.topic.id <- sample(topics, 1, prob=topic.probabilities)
-#   print(sample.topic.id)
-#   topic.probabilities <- unlist(topic.probabilities)
-#   print(topic.probabilities)
-#   sampled.topic <- sample(topics, 1, prob=topic.probabilities)
-#   print(sampled.topic)
-#   stop("error")
+  # Update the assignment's topic value
+  assignment$topic_id <- sampled.topic.id
+  # Increases the related frequencies
+  word.topic.freq <- with(word.topic.frequencies,
+                          word.topic.frequencies[which(word_id==assignment$word_id & 
+                            topic_id==assignment$topic_id),])
+  word.topic.freq$Freq <- word.topic.freq$Freq + 1
+  category.topic.freq <- with(category.topic.frequencies,
+                              category.topic.frequencies[
+                                which(category_id==assignment$category_id & 
+                                  topic_id==assignment$topic_id),])
+  category.topic.freq$Freq <- category.topic.freq$Freq + 1
+  user.topic.freq <- with(user.topic.frequencies,
+                          user.topic.frequencies[
+                            which(user_id==assignment$user_id & 
+                              topic_id==assignment$topic_id),])
+  user.topic.freq$Freq <- user.topic.freq$Freq + 1
 }
 
 ComputeTopicProbability <- function(topic.word.assignments,
@@ -143,9 +159,9 @@ ComputeTopicProbability <- function(topic.word.assignments,
                                       category.number,
                                       topic.number) {
   
-  t <- with(topic.word.assignments, topic.word.assignments[
-    which(user_id==assignment$user_id & topic_id==topic.id),])
-  l.uz.ui <- nrow(t)
+    l.uz.ui <- ComputeNumberOfWordsAssignedToTopic(topic.word.assignments,
+                                                   assignment$user_id,
+                                                   topic.id)
   
   word.freqs <- 
     with(word.topic.frequencies, 
@@ -155,7 +171,7 @@ ComputeTopicProbability <- function(topic.word.assignments,
          word.topic.frequencies[which(word_id==assignment$word_id &
            topic_id==topic.id),]$Freq)
   if (length(n.z.ui.w.ui)==0) {
-    n.z.ui.w.ui <- 0
+    n.z.ui.w.ui <- 1 # otherwise, smoothing gives the negative result
   }
   beta.params <- rep(.05, length(word.freqs))
   n.z.ui.v <- word.freqs + beta.params
@@ -164,7 +180,7 @@ ComputeTopicProbability <- function(topic.word.assignments,
                       category.topic.frequencies[which(category_id==assignment$category_id & 
                         topic_id==topic.id),]$Freq)
   if (length(m.z.ui.c.ui)==0) {
-    m.z.ui.c.ui <- 0
+    m.z.ui.c.ui <- 1 # otherwise, smoothing gives the negative result
   }
   category.freqs <- 
     with(category.topic.frequencies, 
@@ -175,4 +191,42 @@ ComputeTopicProbability <- function(topic.word.assignments,
     (l.uz.ui + 50/topic.number - 1)*(n.z.ui.w.ui + .05 - 1)*
     (m.z.ui.c.ui + 50/category.number - 1)/((sum(n.z.ui.v) - 1)*(sum(m.z.ui.c) - 1))
   return (topic.probability)
+}
+ComputeNumberOfWordsAssignedToTopic <- function(topic.word.assignments,
+                                                user.id,
+                                                topic.id) {
+  t <- with(topic.word.assignments, topic.word.assignments[
+    which(user_id==user.id & topic_id==topic.id),])
+  l.uz.ui <- nrow(t)
+  if (l.uz.ui == 0) {
+    l.uz.ui <- 1 # otherwise, smoothing gives the negative result
+  }
+  return (l.uz.ui)
+}
+
+ComputeThetaParameters <- function(topic.word.assignments,
+                                  users, 
+                                  topics) {
+  
+  topic.number <- length(topics)
+  alpha.params <- rep(50/topic.number, topic.number) 
+  theta.parameters <- ldply(users,
+            function(user.id) {
+    l.uz.z <- unlist(llply(topics,
+          function(topic) {
+            ComputeNumberOfWordsAssignedToTopic(topic.word.assignments,
+                                                              user.id,
+                                                              topic)}))
+    theta.per.user <- ldply(topics, function(topic) {
+    l.uz.ui <- ComputeNumberOfWordsAssignedToTopic(topic.word.assignments,
+                                                    user.id,
+                                                    topic)
+    theta <- (l.uz.ui + 50/topic.number - 1)/(sum(l.uz.z + alpha.params) - 1)
+    c(user.id, topic, theta)
+    })
+    theta.per.user <- as.data.frame(theta.per.user)
+    names(theta.per.user) <- c("user_id", "topic_id", "theta")
+    theta.per.user
+  })
+    return (theta.parameters)
 }
