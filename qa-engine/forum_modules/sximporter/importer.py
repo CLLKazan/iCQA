@@ -504,6 +504,9 @@ def post_vote_import(dump, uidmap, posts):
             question.save()
 
         elif sxv['votetypeid'] in ('2', '3'):
+            action.action_type = (sxv['votetypeid'] == '2') and "voteup" or "votedown"
+            action.save()
+
             if not (action.node.id, action.user_id) in user2vote:
                 user2vote.append((action.node.id, action.user_id))
 
@@ -515,9 +518,6 @@ def post_vote_import(dump, uidmap, posts):
                         action = action
                         )
                 ov.save()
-            
-            action.action_type = (sxv['votetypeid'] == '2') and "voteup" or "votedown"
-            action.save()
 
         elif sxv['votetypeid'] in ('4', '12', '13'):
             action.action_type = "flag"
