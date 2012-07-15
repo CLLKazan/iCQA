@@ -14,15 +14,19 @@ TrainUQA <- function(db.channel, db.name, user.profiles, max.iteration=20) {
   require(tm)
   require(plyr)
   require(foreach)
-  # TODO(nzhiltsov): calculate the topic number optimally
-  topic.number <- 3*length(unique(user.profiles$tag_id))
+  
   # Building the document-term matrix
   corpus <- tm::Corpus(VectorSource(user.profiles$post))
   dtm <- 
     tm::DocumentTermMatrix(corpus, control=list(removePunctuation=T, stopwords=T))
+  
   # TODO(nzhiltsov): the number of users is temporarily reduced; 
   # remove '[...]' in the end!
-  users <- unique(user.profiles$user_id)[1:2]
+  #
+  # TODO(nzhiltsov): calculate the topic number optimally
+  users <- unique(user.profiles$user_id)[1:10]
+  topic.number <- 5*length(unique(user.profiles[1:10,]$tag_id))
+
   topic.word.assignments <- ldply(users, 
                                   function(u) 
                                 {BuildTopicWordAssignments(u,
@@ -31,63 +35,101 @@ TrainUQA <- function(db.channel, db.name, user.profiles, max.iteration=20) {
                                                            topic.number)},
                                   .progress="text")
   
+  
   prev.perplexity <- Inf
   iteration.number <- 0
-  for (i in 1:max.iteration)  {
   topics <- unique(topic.word.assignments$topic_id)
   words <- unique(topic.word.assignments$word_id)
   categories <- unique(topic.word.assignments$category_id)
   
   category.number <- length(unique(topic.word.assignments$category_id))
+  
+  # Computes overall frequencies
+  word.topic.frequencies <- ddply(topic.word.assignments,
+                                  .(topic.word.assignments$word_id,
+                                    topic.word.assignments$topic_id),
+                                  nrow)
+  names(word.topic.frequencies) <- c("word_id", "topic_id", "Freq")
+  category.topic.frequencies <- ddply(topic.word.assignments,
+                                      .(topic.word.assignments$category_id,
+                                        topic.word.assignments$topic_id),
+                                      nrow)
+  names(category.topic.frequencies) <- c("category_id", "topic_id", "Freq")
+  user.topic.frequencies <- ddply(topic.word.assignments,
+                                  .(topic.word.assignments$user_id,
+                                    topic.word.assignments$topic_id),
+                                  nrow)
+  names(user.topic.frequencies) <- c("user_id", "topic_id", "Freq")
+
+  for (i in 1:max.iteration)  {
   # Processes assignments
-  topic.word.assignments <- 
-    ddply(topic.word.assignments,  .(user_id,word_id,category_id,topic_id),
-        function(assignment) {
-          # Computes overall frequencies
-          word.topic.frequencies <- ddply(topic.word.assignments,
-                                          .(topic.word.assignments$word_id,
-                                            topic.word.assignments$topic_id),
-                                          nrow)
-          names(word.topic.frequencies) <- c("word_id", "topic_id", "Freq")
-          category.topic.frequencies <- ddply(topic.word.assignments,
-                                              .(topic.word.assignments$category_id,
-                                                topic.word.assignments$topic_id),
-                                              nrow)
-          names(category.topic.frequencies) <- c("category_id", "topic_id", "Freq")
-          user.topic.frequencies <- ddply(topic.word.assignments,
-                                          .(topic.word.assignments$user_id,
-                                            topic.word.assignments$topic_id),
-                                          nrow)
-          names(user.topic.frequencies) <- c("user_id", "topic_id", "Freq")
-              
+    for (j in 1:nrow(topic.word.assignments)) {
+      assignment <- topic.word.assignments[j,]
           # Processes the row
-                    new.row <- ProcessAssignment(assignment,
+            new.row <- ProcessAssignment(assignment,
                                       word.topic.frequencies,
                                       category.topic.frequencies,
                                       user.topic.frequencies,
                                       topic.word.assignments,
                                       topics,
                                       category.number)
-          
-                    return (new.row)
-                    }, .progress="text")  
+      # Decreases the related frequencies
+      word.topic.frequencies[which(word.topic.frequencies$word_id==assignment$word_id &
+        word.topic.frequencies$topic_id==assignment$topic_id),]$Freq <-
+        word.topic.frequencies[which(word.topic.frequencies$word_id==assignment$word_id &
+        word.topic.frequencies$topic_id==assignment$topic_id),]$Freq - 1
+      
+      category.topic.frequencies[which(category.topic.frequencies$category_id==assignment$category_id &
+        category.topic.frequencies$topic_id==assignment$topic_id),]$Freq <-
+        category.topic.frequencies[which(category.topic.frequencies$category_id==assignment$category_id &
+        category.topic.frequencies$topic_id==assignment$topic_id),]$Freq - 1
+      
+      user.topic.frequencies[which(user.topic.frequencies$user_id==assignment$user_id &
+        user.topic.frequencies$topic_id==assignment$topic_id),]$Freq <-
+        user.topic.frequencies[which(user.topic.frequencies$user_id==assignment$user_id &
+        user.topic.frequencies$topic_id==assignment$topic_id),]$Freq - 1
+        # Replace the topic
+            topic.word.assignments[j,]$topic_id <- new.row$topic_id
+          # Increases the related frequencies
+          if (nrow(word.topic.frequencies[which(word.topic.frequencies$word_id==new.row$word_id &
+            word.topic.frequencies$topic_id==new.row$topic_id),]) > 0)  {
+          word.topic.frequencies[which(word.topic.frequencies$word_id==new.row$word_id &
+            word.topic.frequencies$topic_id==new.row$topic_id),]$Freq <-
+            word.topic.frequencies[which(word.topic.frequencies$word_id==new.row$word_id &
+            word.topic.frequencies$topic_id==new.row$topic_id),]$Freq + 1
+          } else {
+            word.topic.frequencies <- rbind(word.topic.frequencies,
+                                            c(new.row$word_id, new.row$topic_id, 1))
+          }
+          if (nrow(category.topic.frequencies[which(category.topic.frequencies$category_id==new.row$category_id &
+            category.topic.frequencies$topic_id==new.row$topic_id),]) > 0) {
+          category.topic.frequencies[which(category.topic.frequencies$category_id==new.row$category_id &
+            category.topic.frequencies$topic_id==new.row$topic_id),]$Freq <-
+            category.topic.frequencies[which(category.topic.frequencies$category_id==new.row$category_id &
+            category.topic.frequencies$topic_id==new.row$topic_id),]$Freq + 1
+          } else {
+            category.topic.frequencies <- rbind(category.topic.frequencies,
+                                                c(new.row$category_id, new.row$topic_id, 1))
+          }
+          if (nrow(user.topic.frequencies[which(user.topic.frequencies$user_id==new.row$user_id &
+            user.topic.frequencies$topic_id==new.row$topic_id),]) > 0)       {
+         user.topic.frequencies[which(user.topic.frequencies$user_id==new.row$user_id &
+            user.topic.frequencies$topic_id==new.row$topic_id),]$Freq <-
+            user.topic.frequencies[which(user.topic.frequencies$user_id==new.row$user_id &
+            user.topic.frequencies$topic_id==new.row$topic_id),]$Freq + 1
+          } else {
+            user.topic.frequencies <- rbind(user.topic.frequencies,
+                                            c(new.row$user_id, new.row$topic_id, 1))
+          }
+        }
   # Estimates the parameters
   theta.parameters <- ComputeThetaParameters(topic.word.assignments,
                          users, 
                          topics)
-  word.topic.frequencies <- ddply(topic.word.assignments,
-                                  .(topic.word.assignments$word_id,
-                                    topic.word.assignments$topic_id),
-                                  nrow)
-  names(word.topic.frequencies) <- c("word_id", "topic_id", "Freq")
+
   phi.parameters <- ComputePhiParameters(word.topic.frequencies,
                                          words,
                                          topics)
-  category.topic.frequencies <- ddply(topic.word.assignments,
-                                      .(topic.word.assignments$category_id,
-                                        topic.word.assignments$topic_id),
-                                      nrow)
-  names(category.topic.frequencies) <- c("category_id", "topic_id", "Freq")
   psi.parameters <- ComputePsiParameters(category.topic.frequencies,
                                          categories,
                                          topics)
@@ -125,10 +167,9 @@ BuildTuples <- function(id, dtm, user.profiles, user,topic.number) {
                                      which(Terms(dtm)[]==term),
                                      category.id,
                                      sample(1:topic.number,1,T))})   
-    df <- as.data.frame(topic.word.assignments)
-    
-    names(df) <- c("user_id", "word_id", "category_id", "topic_id")  
-    result <- df
+    names(topic.word.assignments) <-
+      c("user_id", "word_id", "category_id", "topic_id")  
+    result <- topic.word.assignments
     }
     return (result)
 }
@@ -189,9 +230,11 @@ ComputeTopicProbability <- function(topic.word.assignments,
          category.topic.frequencies[which(topic_id==topic.id),]$Freq)
   gamma.params <- rep(50/category.number, length(category.freqs))
   m.z.ui.c <- category.freqs + gamma.params
-  topic.probability <- 
-    (l.uz.ui + 50/topic.number - 1)*(n.z.ui.w.ui + .05 - 1)*
-    (m.z.ui.c.ui + 50/category.number - 1)/((sum(n.z.ui.v) - 1)*(sum(m.z.ui.c) - 1))
+
+    topic.probability <- 
+    (l.uz.ui + 50/topic.number)*(n.z.ui.w.ui + .05)*
+    (m.z.ui.c.ui + 50/category.number)/(sum(n.z.ui.v)*sum(m.z.ui.c))
+
   return (topic.probability)
 }
 ComputeNumberOfWordsAssignedToTopic <- function(topic.word.assignments,
@@ -200,9 +243,6 @@ ComputeNumberOfWordsAssignedToTopic <- function(topic.word.assignments,
   t <- with(topic.word.assignments, topic.word.assignments[
     which(user_id==user.id & topic_id==topic.id),])
   l.uz.ui <- nrow(t)
-  if (l.uz.ui == 0) {
-    l.uz.ui <- 1 # otherwise, smoothing gives the negative result
-  }
   return (l.uz.ui)
 }
 ComputeTotalNumberOfWordsAssignedToTopic <- function(word.topic.frequencies,
@@ -213,7 +253,7 @@ ComputeTotalNumberOfWordsAssignedToTopic <- function(word.topic.frequencies,
          word.topic.frequencies[which(word_id==word.id &
            topic_id==topic.id),]$Freq)
   if (length(n.z.ui.w.ui)==0) {
-    n.z.ui.w.ui <- 1 # otherwise, smoothing gives the negative result
+    n.z.ui.w.ui <- 0
   }
   return (n.z.ui.w.ui)
 }
@@ -225,7 +265,7 @@ ComputeNumberOfCategoriesAssignedToTopic <- function(category.topic.frequencies,
                       category.topic.frequencies[which(category_id==category.id & 
                         topic_id==topic.id),]$Freq)
   if (length(m.z.ui.c.ui)==0) {
-    m.z.ui.c.ui <- 1 # otherwise, smoothing gives the negative result
+    m.z.ui.c.ui <- 0
   }
   return (m.z.ui.c.ui)
 }
@@ -247,7 +287,7 @@ ComputeThetaParameters <- function(topic.word.assignments,
     l.uz.ui <- ComputeNumberOfWordsAssignedToTopic(topic.word.assignments,
                                                     user.id,
                                                     topic)
-    theta <- (l.uz.ui + 50/topic.number - 1)/(sum(l.uz.z + alpha.params) - 1)
+    theta <- (l.uz.ui + 50/topic.number)/(sum(l.uz.z + alpha.params))
     c(user.id, topic, theta)
     })
     theta.per.user <- as.data.frame(theta.per.user)
@@ -276,7 +316,7 @@ ComputePhiParameters <- function(word.topic.frequencies,
                   ComputeTotalNumberOfWordsAssignedToTopic(word.topic.frequencies,
                                                                word,
                                                                topic)
-                phi <- (n.z.ui.w.ui + .05 - 1)/(sum(n.z.ui.w.v+beta.params) - 1)
+                phi <- (n.z.ui.w.ui + .05)/(sum(n.z.ui.w.v+beta.params))
                 c(topic, word, phi)
               })
               phi <- as.data.frame(phi.per.user)
@@ -306,8 +346,8 @@ ComputePsiParameters <- function(category.topic.frequencies,
                 ComputeNumberOfCategoriesAssignedToTopic(category.topic.frequencies,
                                                          category,
                                                          topic)
-              psi <- (m.z.ui.c.ui + 50/category.number - 1)/
-                (sum(m.z.ui.c+gamma.params) - 1)
+              psi <- (m.z.ui.c.ui + 50/category.number)/
+                (sum(m.z.ui.c+gamma.params))
               c(topic, category, psi)
             })
             psi <- as.data.frame(psi.per.user)
