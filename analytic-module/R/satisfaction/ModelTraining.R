@@ -24,7 +24,12 @@ GetTrainingData <- function(db.channel) {
   results <- dbSendQuery(db.channel, sql)
   data <- merge(data, fetch(results, n=-1), all=TRUE)
   
-  sql <- paste(readLines(paste(folder, "AvgAnsScoreForTag.sql", sep="")),
+  sql <- paste(readLines(paste(folder, "AvgAnsUpsForTag.sql", sep="")),
+               collapse=" ")
+  results <- dbSendQuery(db.channel, sql)
+  data <- merge(data, fetch(results, n=-1), all=TRUE)
+  
+  sql <- paste(readLines(paste(folder, "AvgAnsDownsForTag.sql", sep="")),
                collapse=" ")
   results <- dbSendQuery(db.channel, sql)
   data <- merge(data, fetch(results, n=-1), all=TRUE)
@@ -56,6 +61,9 @@ GetTrainingData <- function(db.channel) {
   
   data$satisfied <- as.factor(data$satisfied)
   data[is.na(data)] <- 0
+  data$avg_ans_score_tag <- data$avg_ans_ups_tag - data$avg_ans_downs_tag
+  data$avg_ans_ups_tag <- NULL
+  data$avg_ans_downs_tag <- NULL
   data
 }
 
@@ -64,24 +72,3 @@ TrainModel <- function(training.data) {
   
   J48(satisfied ~ ., data=training.data)
 }
-
-library("RMySQL")
-library("rJava")
-
-sourceDirectory(paste(Sys.getenv("CQA_HOME"),
-                      "/analytic-module/R/common",
-                      sep=""), pattern="*.R")
-db.configuration <- ReadDBConfiguration()
-mychannel <- 
-  dbConnect(MySQL(), user=db.configuration$user,
-            host="localhost", password=db.configuration$password,
-            dbname=db.configuration$name)
-data <- GetTrainingData(mychannel)
-
-model <- TrainModel(data)
-.jcache(model$classifier)
-save(model,file=paste(Sys.getenv("CQA_HOME"), 
-                           "/analytic-module/R/satisfaction/model.dat",
-                           sep=""))
-
-dbDisconnect(mychannel)
