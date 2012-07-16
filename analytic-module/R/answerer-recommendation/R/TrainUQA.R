@@ -1,10 +1,9 @@
-TrainUQA <- function(db.channel, db.name, user.profiles, max.iteration=20) {
+TrainUQA <- function(dtm, user.profiles, max.iteration=20) {
   # Trains a UQA model proposed in the paper J. Guo et al. "Tapping on the Potential
   # of Q&A community by recommending answer providers" (2008)
   #
   # Args:
-  #   db.channel:     database connection object
-  #   db.name:        database name
+  #   dtm:     document-term matrix
   #   user.profiles:  user profiles 
   #   max.iteration:  maximum number of iterations
   #
@@ -14,11 +13,6 @@ TrainUQA <- function(db.channel, db.name, user.profiles, max.iteration=20) {
   require(tm)
   require(plyr)
   require(foreach)
-  
-  # Building the document-term matrix
-  corpus <- tm::Corpus(VectorSource(user.profiles$post))
-  dtm <- 
-    tm::DocumentTermMatrix(corpus, control=list(removePunctuation=T, stopwords=T))
   
   # TODO(nzhiltsov): the number of users is temporarily reduced; 
   # remove '[...]' in the end!
