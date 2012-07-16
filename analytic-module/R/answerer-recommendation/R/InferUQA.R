@@ -31,7 +31,7 @@ GetQuestionTopicDistribution <- function(dtm,
   body.word.ids <- llply(body.terms, function(term) {which(tm::Terms(dtm)[]==term)})
   
   question.topic.probabilities <- 
-    laply(topics,
+    llply(topics,
         function(topic) {
             category.probability <- 
               with(psis, psis[which(category_id==question$tag_id &
@@ -55,5 +55,10 @@ GetQuestionTopicDistribution <- function(dtm,
                 (1 + length(title.terms) + length(body.terms))
             prob
         })
+  question.topic.probabilities <- unlist(question.topic.probabilities)
+  # Workaround for dealing with vectors of zeros
+  if (length(question.topic.probabilities) < length(topics)) {
+    question.topic.probabilities <- rep(0, length(topics))
+  }
   return (list(topics=topics, prob=question.topic.probabilities))
 }
