@@ -53,7 +53,6 @@ GetQuestionTopicDistribution <- function(dtm,
                   sum(title.word.probabilities + 
                     sum(body.word.probabilities)))/
                 (1 + length(title.terms) + length(body.terms))
-            print(prob)
             prob
         })
   return (list(topics=topics, prob=question.topic.probabilities))
