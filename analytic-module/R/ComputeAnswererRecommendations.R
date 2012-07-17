@@ -54,7 +54,7 @@ dtm <-
 uqa.model <- TrainUQA(dtm, user.profiles)
 
 question.answerers <- 
-  foreach(question=iter(open.questions[1:10,], by='row'), .combine=rbind) %dopar% {
+  foreach(question=iter(open.questions, by='row'), .combine=rbind) %dopar% {
     question.topic.probabilities <- 
       GetQuestionTopicDistribution(dtm,
                                    length(user.profiles$post),
@@ -70,7 +70,7 @@ question.answerers <-
       cand.body.offset <- 
             length(user.profiles$post) + length(open.questions$title)+
             length(open.questions$body)+ length(candidate.questions$title)
-      foreach(candidate=iter(candidate.questions[1:10,], by='row'), .combine=rbind) %dopar% {
+      foreach(candidate=iter(candidate.questions, by='row'), .combine=rbind) %dopar% {
               candidate.topic.probabilities <- GetQuestionTopicDistribution(dtm,
                                                               cand.title.offset,
                                                               cand.body.offset,
@@ -96,8 +96,9 @@ question.answerers <- ddply(question.answerers,
                             .(question.answerers$question_id,
                               question.answerers$user_id),
                             function(row) {sum(row$score)})
+names(question.answerers) <- c("question_id", "user_id", "score")
 # Update the question answerer index
 dbWriteTable(channel, "analytics_answerer_recommendation",
-             question.answerers, overwrite=T)
+             question.answerers, overwrite=T, row.names=F)
 # Closing the connection
 dbDisconnect(channel)
