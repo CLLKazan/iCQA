@@ -10,7 +10,7 @@ sourceDirectory(paste(Sys.getenv("CQA_HOME"),
                       "/analytic-module/R/common",
                       sep=""), pattern="*.R")
 sourceDirectory(paste(Sys.getenv("CQA_HOME"),
-                      "/analytic-module/R/satisfaction",
+                      "/analytic-module/R/satisfaction/R",
                       sep=""), pattern="*.R", recursive=FALSE)
 
 # Creating connection to database

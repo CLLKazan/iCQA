@@ -9,7 +9,7 @@ GetTrainingData <- function(db.channel) {
   require("RMySQL")
   
   folder <- paste(Sys.getenv("CQA_HOME"),
-                  "/analytic-module/R/satisfaction/features/", sep="")
+                  "/analytic-module/R/satisfaction/inst/sql/", sep="")
   
   sql <- paste(readLines(paste(folder, "Satisfied.sql", sep="")), 
                collapse=" ")
