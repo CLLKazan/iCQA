@@ -14,12 +14,10 @@ TrainUQA <- function(dtm, user.profiles, max.iteration=20) {
   require(plyr)
   require(foreach)
   require(iterators)  
-  # TODO(nzhiltsov): the number of users is temporarily reduced; 
-  # remove '[...]' in the end!
-  #
-  # TODO(nzhiltsov): calculate the topic number optimally
+  
   users <- unique(user.profiles$user_id)
-  topic.number <- 3*length(unique(user.profiles$tag_id))
+  # TODO(nzhiltsov): calculate the topic number optimally
+  topic.number <- 20
 
   topic.word.assignments <- ldply(users, 
                                   function(u) 
@@ -54,7 +52,21 @@ TrainUQA <- function(dtm, user.profiles, max.iteration=20) {
                                     topic.word.assignments$topic_id),
                                   nrow)
   names(user.topic.frequencies) <- c("user_id", "topic_id", "Freq")
-
+  # Estimates the parameters
+  theta.parameters <- ComputeThetaParameters(topic.word.assignments,
+                                             users, 
+                                             topics)
+  
+  phi.parameters <- ComputePhiParameters(word.topic.frequencies,
+                                         words,
+                                         topics)
+  psi.parameters <- ComputePsiParameters(category.topic.frequencies,
+                                         categories,
+                                         topics)
+  # Computes perplexity
+  perplexity <- ComputePerplexity(topic.word.assignments, topics,
+                                  theta.parameters, phi.parameters, psi.parameters)
+  print(paste("The initial perplexity =", perplexity))
   for (i in 1:max.iteration)  {
   # Processes assignments
     foreach (assignment=iter(topic.word.assignments, by='row')) %do% {
@@ -85,8 +97,11 @@ TrainUQA <- function(dtm, user.profiles, max.iteration=20) {
       user.topic.frequencies[which(user.topic.frequencies$user_id==assignment$user_id &
         user.topic.frequencies$topic_id==assignment$topic_id),]$Freq <- t - 1
             }
-        # Replace the topic
-            assignment$topic_id <- new.row$topic_id
+            
+            # Replaces the topic
+            topic.word.assignments[as.integer(rownames(assignment)),]$topic_id <-
+              new.row$topic_id
+            
           # Increases the related frequencies
           if (nrow(word.topic.frequencies[which(word.topic.frequencies$word_id==new.row$word_id &
             word.topic.frequencies$topic_id==new.row$topic_id),]) > 0)  {
@@ -136,9 +151,9 @@ TrainUQA <- function(dtm, user.profiles, max.iteration=20) {
   iteration.number <- iteration.number + 1
     print(paste("Training UQA model:", iteration.number,
                 "iteration(s) completed; the perplexity value =", perplexity))
-  if (prev.perplexity - perplexity < 1)  {
-    break
-  }
+#   if (prev.perplexity - perplexity < 1)  {
+#     break
+#   }
   prev.perplexity <- perplexity
   }
   
@@ -358,6 +373,8 @@ ComputePsiParameters <- function(category.topic.frequencies,
 
 ComputePerplexity <- function(topic.word.assignments, topics,
                   theta.parameters, phi.parameters, psi.parameters) {
+  require(foreach)
+  require(iterators)
   test.set.size <- nrow(topic.word.assignments)
   probabilities <- foreach(assignment=iter(topic.word.assignments, by='row'),
                            .combine=c) %dopar% {
