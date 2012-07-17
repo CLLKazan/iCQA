@@ -102,6 +102,7 @@ INSTALLED_APPS = [
     'django.contrib.sitemaps',
     'django.contrib.markup',
     'forum',
+    'analytics',
 ]
 
 if DEBUG:
