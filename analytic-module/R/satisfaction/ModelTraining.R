@@ -1,4 +1,11 @@
 GetTrainingData <- function(db.channel) {
+  # Retrieves training data from the db
+  #
+  # Args:
+  #   db.channel: db connection object
+  #
+  # Returns:
+  #   Data frame of training data
   require("RMySQL")
   
   folder <- paste(Sys.getenv("CQA_HOME"),
@@ -68,6 +75,13 @@ GetTrainingData <- function(db.channel) {
 }
 
 TrainModel <- function(training.data) {
+  # Trains C4.5 decision tree
+  #
+  # Args:
+  #   training.data: data frame of training data
+  #
+  # Returns:
+  #   Trained model
   require("RWeka")
   
   J48(satisfied ~ ., data=training.data)
