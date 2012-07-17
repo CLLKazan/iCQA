@@ -1,4 +1,4 @@
-TrainUQA <- function(dtm, user.profiles, max.iteration=20) {
+TrainUQA <- function(dtm, user.profiles, max.iteration=50) {
   # Trains a UQA model proposed in the paper J. Guo et al. "Tapping on the Potential
   # of Q&A community by recommending answer providers" (2008)
   #
@@ -151,9 +151,9 @@ TrainUQA <- function(dtm, user.profiles, max.iteration=20) {
   iteration.number <- iteration.number + 1
     print(paste("Training UQA model:", iteration.number,
                 "iteration(s) completed; the perplexity value =", perplexity))
-#   if (prev.perplexity - perplexity < 1)  {
-#     break
-#   }
+  if (prev.perplexity - perplexity < 1)  {
+    break
+  }
   prev.perplexity <- perplexity
   }
   
