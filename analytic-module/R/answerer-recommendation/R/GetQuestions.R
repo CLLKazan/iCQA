@@ -38,7 +38,8 @@ GetCandidateQuestions <- function(db.channel) {
   require(RMySQL)
   results <- 
     dbSendQuery(db.channel,
-          "SELECT f.id, f.title, f.body, f.author_id, min(tag_id) as tag_id
+          "SELECT f.id, f.title, f.body, f.author_id, min(tag_id) as tag_id,
+                f.tagnames
                 FROM forum_node f LEFT JOIN forum_node_tags t ON f.id=t.node_id
                 WHERE f.node_type='question' AND 
                 EXISTS (SELECT * FROM forum_node f2

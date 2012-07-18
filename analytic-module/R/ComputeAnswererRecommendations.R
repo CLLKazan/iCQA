@@ -42,7 +42,8 @@ indexing.vector <- c(user.profiles$post,
                          open.questions$title,
                          open.questions$body,
                          candidate.questions$title,
-                         candidate.questions$body)
+                         candidate.questions$body,
+                         candidate.questions$tagnames)
 corpus <- tm::Corpus(VectorSource(indexing.vector))
 dtm <- 
   tm::DocumentTermMatrix(corpus, control=list(tolower=T,
@@ -50,7 +51,18 @@ dtm <-
                                               removeNumbers=T,
                                               stopwords=T,
                                               stemming=T))
-
+# Building the document term matrix for candidate questions
+candidate.index.vector <- 
+  foreach(candidate=iter(candidate.questions, by='row'), .combine=c) %dopar%{
+  paste(candidate$title, candidate$body, candidate$tagnames)
+}
+candidate.corpus <- tm::Corpus(VectorSource(candidate.index.vector))
+candidate.dtm <- 
+  tm::DocumentTermMatrix(candidate.corpus, control=list(tolower=T,
+                                              removePunctuation=T,
+                                              removeNumbers=T,
+                                              stopwords=T,
+                                              stemming=T))
 # Trains the UQA model
 uqa.model <- TrainUQA(dtm, user.profiles)
 topics <- unique(uqa.model$theta$topic_id)
