@@ -1,0 +1,31 @@
+test_MergeFrames <- function() {
+  folder <- paste(Sys.getenv("CQA_HOME"),
+                  "/analytic-module/R/satisfaction/inst/testData/", sep="")
+  data <- read.table(paste(folder, "data.csv", sep=""))
+  d1 <- read.table(paste(folder, "d1.csv", sep=""))
+  d2 <- read.table(paste(folder, "d2.csv", sep=""))
+  d3 <- read.table(paste(folder, "d3.csv", sep=""))
+  d4 <- read.table(paste(folder, "d4.csv", sep=""))
+  d5 <- read.table(paste(folder, "d5.csv", sep=""))
+  d6 <- read.table(paste(folder, "d6.csv", sep=""))
+  d7 <- read.table(paste(folder, "d7.csv", sep=""))
+  d8 <- read.table(paste(folder, "d8.csv", sep=""))
+  d9 <- read.table(paste(folder, "d9.csv", sep=""))
+  d10 <- read.table(paste(folder, "d10.csv", sep=""))
+
+  data <- MergeFrames(data, list(d1,d2,d3,d4,d5,d6,d7,d8,d9,d10))
+  data.original <- read.table(paste(folder, "data_original.csv", sep=""))
+  data.original$satisfied <- as.factor(data.original$satisfied)
+
+  checkEquals(data$q_id,data.original$q_id)
+  checkEquals(data$satisfied,data.original$satisfied)
+  checkEquals(data$avg_ans_num_tag,data.original$avg_ans_num_tag)
+  checkEquals(data$avg_ans_num_for_user,data.original$avg_ans_num_for_user)
+  checkEquals(data$avg_ans_num_ph_tag,data.original$avg_ans_num_ph_tag)
+  checkEquals(data$member_duration,data.original$member_duration)
+  checkEquals(data$num_ans_accepted,data.original$num_ans_accepted)
+  checkEquals(data$num_ans_received,data.original$num_ans_received)
+  checkEquals(data$post_time,data.original$post_time)
+  checkEquals(data$user_rating,data.original$user_rating)
+  checkEquals(data$avg_ans_score_tag,data.original$avg_ans_score_tag)
+}

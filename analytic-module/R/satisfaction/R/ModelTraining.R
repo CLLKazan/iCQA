@@ -1,3 +1,36 @@
+MergeFrameList <- function(x, L) {
+  # Merges list of data frames
+  #
+  # Args:
+  #   x: initial frame
+  #   L: list of data frames
+  #
+  # Returns:
+  #   Resulting data frame
+  for(e in L) {
+    x <- merge(x,e,all=TRUE)
+  }
+  x
+}
+
+MergeFrames <- function(data, frame.list) {
+  # Does necessary transformations into the training data
+  #
+  # Args:
+  #   data: initial frame
+  #   frame.list: list of data frames
+  #
+  # Returns:
+  #   Resulting data frame
+  data <- MergeFrameList(data,frame.list)
+  data$satisfied <- as.factor(data$satisfied)
+  data[is.na(data)] <- 0
+  data$avg_ans_score_tag <- data$avg_ans_ups_tag - data$avg_ans_downs_tag
+  data$avg_ans_ups_tag <- NULL
+  data$avg_ans_downs_tag <- NULL
+  data
+}
+
 GetTrainingData <- function(db.channel) {
   # Retrieves training data from the db
   #
@@ -19,58 +52,54 @@ GetTrainingData <- function(db.channel) {
   sql <- paste(readLines(paste(folder, "AvgAnsNumForTag.sql", sep="")), 
                collapse=" ")
   results <- dbSendQuery(db.channel, sql)
-  data <- merge(data, fetch(results, n=-1), all=TRUE)
+  d1 <- fetch(results, n=-1)
   
   sql <- paste(readLines(paste(folder, "AvgAnsNumForUser.sql", sep="")), 
                collapse=" ")
   results <- dbSendQuery(db.channel, sql)
-  data <- merge(data, fetch(results, n=-1), all=TRUE)
+  d2 <- fetch(results, n=-1)
   
   sql <- paste(readLines(paste(folder, "AvgAnsNumPerHourForTag.sql", sep="")),
                collapse=" ")
   results <- dbSendQuery(db.channel, sql)
-  data <- merge(data, fetch(results, n=-1), all=TRUE)
+  d3 <- fetch(results, n=-1)
   
   sql <- paste(readLines(paste(folder, "AvgAnsUpsForTag.sql", sep="")),
                collapse=" ")
   results <- dbSendQuery(db.channel, sql)
-  data <- merge(data, fetch(results, n=-1), all=TRUE)
+  d4 <- fetch(results, n=-1)
   
   sql <- paste(readLines(paste(folder, "AvgAnsDownsForTag.sql", sep="")),
                collapse=" ")
   results <- dbSendQuery(db.channel, sql)
-  data <- merge(data, fetch(results, n=-1), all=TRUE)
+  d5 <- fetch(results, n=-1)
   
   sql <- paste(readLines(paste(folder, "MemberDuration.sql", sep="")),
                collapse=" ")
   results <- dbSendQuery(db.channel, sql)
-  data <- merge(data, fetch(results, n=-1), all=TRUE)
+  d6 <- fetch(results, n=-1)
   
   sql <- paste(readLines(paste(folder, "NumAnsAccepted.sql", sep="")),
                collapse=" ")
   results <- dbSendQuery(db.channel, sql)
-  data <- merge(data, fetch(results, n=-1), all=TRUE)
+  d7 <- fetch(results, n=-1)
   
   sql <- paste(readLines(paste(folder, "NumAnsReceived.sql", sep="")),
                collapse=" ")
   results <- dbSendQuery(db.channel, sql)
-  data <- merge(data, fetch(results, n=-1), all=TRUE)
+  d8 <- fetch(results, n=-1)
   
   sql <- paste(readLines(paste(folder, "PostingTime.sql", sep="")),
                collapse=" ")
   results <- dbSendQuery(db.channel, sql)
-  data <- merge(data, fetch(results, n=-1), all=TRUE)
+  d9 <- fetch(results, n=-1)
   
   sql <- paste(readLines(paste(folder, "UserRating.sql", sep="")),
                collapse=" ")
   results <- dbSendQuery(db.channel, sql)
-  data <- merge(data, fetch(results, n=-1), all=TRUE)
+  d10 <- fetch(results, n=-1)
   
-  data$satisfied <- as.factor(data$satisfied)
-  data[is.na(data)] <- 0
-  data$avg_ans_score_tag <- data$avg_ans_ups_tag - data$avg_ans_downs_tag
-  data$avg_ans_ups_tag <- NULL
-  data$avg_ans_downs_tag <- NULL
+  data <- MergeFrames(data, list(d1,d2,d3,d4,d5,d6,d7,d8,d9,d10))
   data
 }
 
