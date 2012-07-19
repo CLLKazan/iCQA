@@ -125,6 +125,17 @@ qst.bm25f.scores <- ddply(qst.bm25f.scores,
                             qst.bm25f.scores$user_id),
                           function(row) {sum(row$score)})
 names(qst.bm25f.scores) <- c("question_id", "user_id", "score")
+# Computes the ranks
+qst.bm25f.scores <- 
+  qst.bm25f.scores[with(qst.bm25f.scores, order(question_id, score, decreasing=T)),]
+qst.questions <- unique(qst.bm25f.scores$question_id)
+user.ranks <- foreach(q=iter(qst.questions), .combine=c) %do% {
+  1:length(qst.bm25f.scores[which(qst.bm25f.scores$question_id==q),]$user_id)
+}
+qst.bm25f.scores$rank <- user.ranks
+qst.bm25f.ranks <- subset(qst.bm25f.scores, select=c("question_id", "user_id", "rank"))
+rownames(qst.bm25f.ranks) <- 1:length(qst.bm25f.ranks$question_id)
+
 # Trains the UQA model
 uqa.model <- TrainUQA(dtm, user.profiles)
 topics <- unique(uqa.model$theta$topic_id)
@@ -221,9 +232,36 @@ lambda1 <- 0.8
 qst.user.topic.values <- (lambda1*qst.user.topic.scores$qst_topic_score) +
                           ((1-lambda1)*qst.user.topic.scores$user_topic_score)
 qst.user.topic.scores$qst_user_topic_score <- qst.user.topic.values
-question.answerers <- 
-  subset(qst.user.topic.scores, select=c("question_id", "user_id", "qst_user_topic_score"))
-names(question.answerers) <- c("question_id", "user_id", "score")
+# Computes the ranks
+qst.user.topic.scores <- 
+  qst.user.topic.scores[with(qst.user.topic.scores, order(question_id,
+                                                          qst_user_topic_score,
+                                                          decreasing=T)),]
+qst.questions <- unique(qst.user.topic.scores$question_id)
+user.ranks <- foreach(q=iter(qst.questions), .combine=c) %do% {
+  1:length(qst.user.topic.scores[which(qst.user.topic.scores$question_id==q),]$user_id)
+}
+qst.user.topic.scores$topic_rank <- user.ranks
+qst.user.topic.ranks <- 
+  subset(qst.user.topic.scores, select=c("question_id", "user_id", "topic_rank"))
+rownames(qst.user.topic.ranks) <- 1:length(qst.user.topic.ranks$question_id)
+# Computes QST-BM25-TOPIC scores
+qst.bm25.topic.scores <-
+  merge(qst.user.topic.ranks, qst.bm25f.ranks, by=c("question_id", "user_id"), all=T)
+na.values <- which(is.na(qst.bm25.topic.scores$rank))
+for(v in na.values) {
+  question.id <- qst.bm25.topic.scores$question_id[v]
+  qst.bm25.topic.scores$rank[v] <-
+    max(qst.bm25.topic.scores[which(
+      qst.bm25.topic.scores$question_id==question.id),]$rank, na.rm=T) + 1
+}
+lambda2 <- .2
+qst.bm25.topic.scores$score <-
+    (1-lambda2)*qst.bm25.topic.scores$rank + lambda2*qst.bm25.topic.scores$topic_rank
+
+# Preparing the data for persisting
+question.answerers <- subset(qst.bm25.topic.scores, 
+                             select=c("question_id", "user_id", "score"))
 # Update the question answerer index
 dbWriteTable(channel, "analytics_answerer_recommendation",
              question.answerers, overwrite=T, row.names=F)
