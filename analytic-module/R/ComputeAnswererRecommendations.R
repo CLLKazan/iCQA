@@ -62,7 +62,69 @@ candidate.dtm <-
                                               removePunctuation=T,
                                               removeNumbers=T,
                                               stopwords=T,
-                                              stemming=T))
+                                              stemming=T,
+                                              dictionary=Terms(dtm)))
+# Computes BM25F scores between questions
+cand.title.offset <- length(user.profiles$post)+ length(open.questions$title)+
+  length(open.questions$body)
+cand.body.offset <- cand.title.offset + length(candidate.questions$title)
+cand.tag.offset <- cand.body.offset + length(candidate.questions$body)
+title.lengths <- 
+  foreach(candidate.question=iter(candidate.questions, by='row'), .combine=c) %dopar% {
+    candidate.question.id <-as.integer(rownames(candidate.question))
+    sum(dtm[cand.title.offset+candidate.question.id, ]$v)
+}
+average.title.length <- mean(title.lengths)
+body.lengths <- 
+  foreach(candidate.question=iter(candidate.questions, by='row'), .combine=c) %dopar% {
+    candidate.question.id <-as.integer(rownames(candidate.question))
+    sum(dtm[cand.body.offset+candidate.question.id, ]$v)
+  }
+average.body.length <- mean(body.lengths)
+tag.lengths <- 
+  foreach(candidate.question=iter(candidate.questions, by='row'), .combine=c) %dopar% {
+    candidate.question.id <-as.integer(rownames(candidate.question))
+    sum(dtm[cand.tag.offset+candidate.question.id, ]$v)
+  }
+average.tag.length <- mean(tag.lengths)
+
+qst.bm25f.scores <- foreach(question=iter(open.questions, by='row'), .combine=rbind) %dopar% {
+  foreach(candidate.question=iter(candidate.questions, by='row'), .combine=rbind) %dopar% {
+    if (question$id==candidate.question$id) {(NULL)}
+    else {
+    bm25f.score <- ComputeBM25F(dtm,
+                                candidate.dtm,
+                                question,
+                                candidate.question,
+                                length(user.profiles$post),
+                                cand.title.offset,
+                                cand.body.offset,
+                                cand.tag.offset,
+                                average.title.length,
+                                average.body.length,
+                                average.tag.length)
+    if (is.na(bm25f.score)) {(NULL)}
+          else {
+              candidate.answerers <- 
+                    with(question.answerer.pairs, question.answerer.pairs[which(
+                    question_id==candidate.question$id),])
+                foreach(answerer=iter(candidate.answerers, by='row'),
+                      .combine=rbind) %do% {
+                    c(question$id, answerer$answerer_id, bm25f.score)
+                }
+              }   
+    }
+  }
+}
+qst.bm25f.scores <- as.data.frame(qst.bm25f.scores)
+names(qst.bm25f.scores) <- c("question_id", "user_id", "score")
+rownames(qst.bm25f.scores) <- 1:length(qst.bm25f.scores$question_id)
+# Merging the duplicates
+qst.bm25f.scores <- ddply(qst.bm25f.scores,
+                          .(qst.bm25f.scores$question_id,
+                            qst.bm25f.scores$user_id),
+                          function(row) {sum(row$score)})
+names(qst.bm25f.scores) <- c("question_id", "user_id", "score")
 # Trains the UQA model
 uqa.model <- TrainUQA(dtm, user.profiles)
 topics <- unique(uqa.model$theta$topic_id)

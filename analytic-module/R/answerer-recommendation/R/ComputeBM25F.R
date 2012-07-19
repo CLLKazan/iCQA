@@ -29,6 +29,7 @@ ComputeBM25F <- function(dtm,
   # Finds the question's terms
   question.terms <- 
     tm::findFreqTerms(dtm[question.offset+question.id,],1)
+  if (length(question.terms) == 0) return (NA)
   question.term.ids <- 
     laply(question.terms, function(term) {which(tm::Terms(dtm)[]==term)})
   # Finds the candidate's fields' lengths
@@ -44,21 +45,41 @@ ComputeBM25F <- function(dtm,
   # Computes IDFs
   question.term.ids.in.candidate.dtm <- 
     laply(question.terms, function(term) {which(tm::Terms(candidate.dtm)[]==term)})
+  
   idfs <- laply(question.term.ids.in.candidate.dtm, function(id) {
     document.frequency <- length(candidate.dtm[,id]$i)
     log( (candidate.dtm$nrow - document.frequency + 0.5) / (document.frequency + 0.5) ) 
   })
-  term.frequency.weights <- laply(question.term.ids, function(term) {
-    title.term.freq <- dtm[candidate.title.offset + candidate.question.id, term]$v
-    body.term.freq <- dtm[candidate.body.offset + candidate.question.id, term]$v
-    tag.term.freq <- dtm[candidate.tag.offset + candidate.question.id, term]$v
-    term.frequency.weight <- 
-      title.weight*title.term.freq/(1 - b + b*candidate.title.length/average.title.length) + 
-      body.weight*body.term.freq/(1 - b + b*candidate.body.length/average.body.length) +  
-      tag.weight*tag.term.freq/(1 - b + b*candidate.tag.length/average.tag.length)
-    term.frequency.weight
-  })
+  term.frequency.weights <- 
+    foreach(term=iter(question.term.ids), .combine=c) %do% {
+      title.term.freq <- dtm[candidate.title.offset + candidate.question.id, term]$v
+      body.term.freq <- dtm[candidate.body.offset + candidate.question.id, term]$v
+      tag.term.freq <- dtm[candidate.tag.offset + candidate.question.id, term]$v
+      title.score <- 
+        title.weight*title.term.freq/(1 - b + b*candidate.title.length/average.title.length)
+      if (equals(title.score, numeric(0))) {
+        title.score <- 0
+      }
+      body.score <- 
+        body.weight*body.term.freq/(1 - b + b*candidate.body.length/average.body.length)
+      if (equals(body.score, numeric(0))) {
+        body.score <- 0
+      }
+      tag.score <- 
+        tag.weight*tag.term.freq/(1 - b + b*candidate.tag.length/average.tag.length)
+      if (equals(tag.score, numeric(0))) {
+        tag.score <- 0
+      }
+      term.frequency.weight <- 
+         title.score + body.score + tag.score
+      term.frequency.weight
+  }
+  # Workaround for dealing with vectors of zeros
+  if (length(term.frequency.weights) < length(question.term.ids)) {
+    term.frequency.weights <- rep(0, length(question.term.ids))
+  }
   bm25.score <- 
     (idfs) %*% (term.frequency.weights/(k1 + term.frequency.weights))
+
   return (bm25.score[[1]])
 }
