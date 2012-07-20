@@ -16,9 +16,11 @@ TrainUQA <- function(dtm, user.profiles, max.iteration=50) {
   require(iterators)  
   
   users <- unique(user.profiles$user_id)
-  # TODO(nzhiltsov): calculate the topic number optimally
-  topic.number <- 20
+  topic.numbers <- seq(20, 40, by=20)
+  perplexities <- rep(NA, length(topic.numbers))
+  models <- list()
 
+  for (topic.number in topic.numbers) {
   topic.word.assignments <- ldply(users, 
                                   function(u) 
                                 {BuildTopicWordAssignments(u,
@@ -150,15 +152,22 @@ TrainUQA <- function(dtm, user.profiles, max.iteration=50) {
                     theta.parameters, phi.parameters, psi.parameters)
   iteration.number <- iteration.number + 1
     print(paste("Training UQA model:", iteration.number,
-                "iteration(s) completed; the perplexity value =", perplexity))
+                "iteration(s) completed; # of topics =", topic.number,
+                "; the perplexity value =", perplexity))
   if (prev.perplexity - perplexity < 1)  {
     break
   }
   prev.perplexity <- perplexity
   }
-  
+  perplexities[which(topic.numbers[]==topic.number)] <- perplexity
   print(paste("Accomplished training the UQA model within", i, "iteration(s)."))
-  return (list(theta=theta.parameters, phi=phi.parameters, psi=psi.parameters))
+  models[[which(topic.numbers[]==topic.number)]] <- 
+        list(theta=theta.parameters, phi=phi.parameters, psi=psi.parameters)
+  }
+  optimal.model <- which(perplexities[] == min(perplexities))
+  print(paste("The optimal model's # of topics =", topic.numbers[optimal.model],
+              "; perplexity =", perplexities[optimal.model]))
+  return (models[[optimal.model]])
 }
 
 BuildTopicWordAssignments <- function(user, dtm, user.profiles, topic.number) {
