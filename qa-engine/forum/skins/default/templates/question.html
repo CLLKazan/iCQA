@@ -124,6 +124,8 @@
                     </td>
                 </tr>
             </table>
+                
+
             {% if question.nis.closed %}
             <div class="question-status" style="margin-bottom:15px">
             <h3>
@@ -178,6 +180,26 @@
                     {{ answers.paginator.page_numbers }}
                 </div>
             {% endif %}
+	{% if recommendedanswerers %}
+<hr/>
+	<div class="tabBar">
+  		<div class="headQuestions">
+    		Who to ask:
+	 	 </div>
+	</div>
+	<div class="userList">
+    	{% for user in recommendedanswerers %}
+    	<div class="user">
+        <ul>
+            <li class="thumb"><a href="{{ user.user.get_profile_url }} ">{% gravatar user.user 32 %}</a></li>
+            <li><a {% if user.user.is_suspended %}class="suspended-user" {% endif %}href="{{ user.user.get_profile_url }}">		{{ user.user.decorated_name }}</a></li>
+            <li>{% get_score_badge user.user %}</li>
+        </ul>
+    </div>
+    {% endfor %}
+</div>
+<hr/>
+{% endif %}
         <form id="fmanswer" action="{% url answer question.id %}" method="post">
             <div style="clear:both">
             </div>
