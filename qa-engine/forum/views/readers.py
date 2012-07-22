@@ -271,6 +271,10 @@ def update_question_view_times(request, question):
     last_seen_in_question = request.session.get('last_seen_in_question', {})
 
     last_seen = last_seen_in_question.get(question.id, None)
+    
+    #TODO: remove temp fix
+    if question.last_activity_at is None:
+        question.update_last_activity(question.author, save=True, time=question.added_at)
 
     if (not last_seen) or (last_seen < question.last_activity_at):
         QuestionViewAction(question, request.user, ip=request.META['REMOTE_ADDR']).save()
