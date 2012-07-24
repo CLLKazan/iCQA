@@ -1,10 +1,10 @@
 "id" "title" "body"
-"1" 2 "How do JavaScript closures work?" "Like the old Albert said: \"If you can't explain it to a six-year old, you really don't understand it yourself.”. Well, I tried to explain JavaScript closures to a 27-year old friend and completely failed.
+"1" 1 "How do JavaScript closures work?" "Like the old Albert said: \"If you can't explain it to a six-year old, you really don't understand it yourself.”. Well, I tried to explain JavaScript closures to a 27-year old friend and completely failed.
 
 How would you explain it to a 6-year old person that is strangely interested in that subject?
 
 EDIT: I have seen the Scheme example given in Stack Overflow, and it did not help."
-"2" 3 "Javascript Closures Explanation" "Question: There seem to be many benefits to Closures, but what are the negatives? Additionally, is my understanding of Closures correct? Finally, once closures are created, can they be destroyed?
+"2" 2 "Javascript Closures Explanation" "Question: There seem to be many benefits to Closures, but what are the negatives? Additionally, is my understanding of Closures correct? Finally, once closures are created, can they be destroyed?
 
 I've been reading a little bit about Javascript Closures. I hope someone a little more knowledgeable will guide my assertions, correcting me where wrong.
 
@@ -106,7 +106,7 @@ The one thing I'm concerned with is the negative impact closures will have on me
 Hope this helps someone,
 
 vol7ron"
-"3" 4 "What is the following variation on Set Cover known as?" "What is the following variation on set cover known as?
+"3" 3 "What is the following variation on Set Cover known as?" "What is the following variation on set cover known as?
 
 Given a set S, a collection C of subsets of S and a positive integer K, do there exist K sets in C such that every pair of elements of S lies in one of the selected subsets.
 
@@ -116,7 +116,7 @@ This generalizes to triples, etc.  I would like to be able to not waste half a p
 
 Also, is there a good place to look for NP-Completeness results that are not in Garey and Johnson?
 "
-"4" 5 "How can I work around the Javascript closures?" "Consider this small snippet of JavaScript:
+"4" 4 "How can I work around the Javascript closures?" "Consider this small snippet of JavaScript:
 
 for(var i in map.maps)
 {
@@ -129,7 +129,7 @@ I assume this behavior is caused by the neat way JavaScript handles closures, go
 The only way I can imagine getting around this is setting the index as data on the button object and using it from the click callback. I could also mimic the map.maps indices in my buttons object and find the correct index on click using indexOf, but I prefer the former method.
 
 What I'm looking for in answers is confirmation that I'm doing it the right way, or a suggestion as to how I should do it."
-"5" 6 "Combine javascript closures together" "I have a \"host\" javascript closure, in which i keep all the common variables i am using over the website
+"5" 5 "Combine javascript closures together" "I have a \"host\" javascript closure, in which i keep all the common variables i am using over the website
 
 var hostFunction = (function () {
     var variableA = $(\"#variableA\");
@@ -149,19 +149,19 @@ var childFunction = (function () {
 How is possible to insert \"childFunction\" inside \"hostFunction\" so i can get access to those variables?
 
 What is the best practice of sharing variables across the website but also keeping them inside a scope so they don't conflict with other javascript variables?"
-"20" 52 "Hierarchies in NP (under the assumption that P != NP)" "Assuming that P != NP, I believe it has been shown that there are problems which are not in P and not NP-Complete. Graph Isomorphism is conjectured to be such a problem.
+"20" 6 "Hierarchies in NP (under the assumption that P != NP)" "Assuming that P != NP, I believe it has been shown that there are problems which are not in P and not NP-Complete. Graph Isomorphism is conjectured to be such a problem.
 
 Is there any evidence of more such 'layers' in NP? i.e. A hierachy of more than three classes starting at P and culminating in NP, such that each is a proper superset of the other? 
 
 Is it possible that the hierarchy is infinite?
 "
-"21" 55 "Simple balanced trees with O(1) concat?" "In Purely Functional Worst Case Constant Time Catenable Sorted Lists, Brodal et al. present purely functional balanced trees with O(1) concatenate and O(lg n) insert, delete, and find. The data structure is somewhat complicated.
+"21" 7 "Simple balanced trees with O(1) concat?" "In Purely Functional Worst Case Constant Time Catenable Sorted Lists, Brodal et al. present purely functional balanced trees with O(1) concatenate and O(lg n) insert, delete, and find. The data structure is somewhat complicated.
 
 Is there a simpler balanced search tree with O(1) concatenate, functional or not?
 "
-"22" 57 "What are the advantages of a red/black tree?" "Question is self-explanatory.
+"22" 8 "What are the advantages of a red/black tree?" "Question is self-explanatory.
 "
-"23" 58 "Minimum spanning tree algorithm." "Is the following a valid algorithm for finding a minimum spanning tree?
+"23" 9 "Minimum spanning tree algorithm." "Is the following a valid algorithm for finding a minimum spanning tree?
 
 
   Given a weighted graph with unique weights, remove the all edges that are the highest cost edge in any cycle of the original full graph.
@@ -169,7 +169,7 @@ Is there a simpler balanced search tree with O(1) concatenate, functional or not
 
 Edit: I've changed the description to draw more attention to the differences between this an Kruskal's algorithm (which it is NOT.) Kruskal's algorithm is iterative, this is just a predicate that can be tested on the original unmodified graph.
 "
-"24" 64 "What specific evidence is there for P = RP?" "RP is the class of problems decidable by a nondeterministic Turing machine that terminates in polynomial time, but that is also allowed one-sided error.  P is the usual class of problems decidable by a deterministic Turing machine that terminates in polynomial time.
+"24" 10 "What specific evidence is there for P = RP?" "RP is the class of problems decidable by a nondeterministic Turing machine that terminates in polynomial time, but that is also allowed one-sided error.  P is the usual class of problems decidable by a deterministic Turing machine that terminates in polynomial time.
 
 P = RP follows from a relationship in circuit complexity.  Impagliazzo and Wigderson showed that P = BPP follows if some problem that can be decided in deterministic exponential time also requires exponential size circuits (note that P = BPP implies P = RP).  Perhaps due to these results, there seems to be a feeling among some complexity theorists that probabilistic reductions can probably be derandomized.
 
@@ -177,7 +177,7 @@ P = RP follows from a relationship in circuit complexity.  Impagliazzo and Wigde
   What other specific evidence is there that P = RP?
 
 "
-"25" 65 "H-free cut problem" "Suppose you are given a connected, simple, undirected graph H.
+"25" 11 "H-free cut problem" "Suppose you are given a connected, simple, undirected graph H.
 
 The H-free cut problem is defined as follows:
 
@@ -202,7 +202,7 @@ Can we drop the 2-connectedness condition and still prove NP-Completeness?
 
 Does anyone know of any known results which would imply the above or a stronger result (or you think might be relevant)?
 "
-"26" 70 "What are the historical roots of Milner's bigraphs?" "Robin Milner defined bigraphs as a type of graphical structure with graph-like structure but where the nodes can be nested.  They generalise process calculi like CCS and the $\pi$-calculus, but Milner seems to have intended for them to be used much more generally: the seminar notes from shortly before his death detail recent developments.
+"26" 12 "What are the historical roots of Milner's bigraphs?" "Robin Milner defined bigraphs as a type of graphical structure with graph-like structure but where the nodes can be nested.  They generalise process calculi like CCS and the $\pi$-calculus, but Milner seems to have intended for them to be used much more generally: the seminar notes from shortly before his death detail recent developments.
 
 Looking back instead of forward, the prologue of Milner's 2009 textbook The Space and Motion of Communicating Agents, does not provide much of a historical background.  Milner explicitly acknowledged its roots in Mobile Ambients and the Pi calculus.  Yet the model is so general that there are bound to be strong links to older models.
 
@@ -214,23 +214,23 @@ Focusing on the syntactic elements rather than the way they are used to capture 
 
 (Edit: now marking this a community wiki, in the hope of attracting further answers.)
 "
-"27" 72 "Can a nondeterministic finite automata (NDFA) be efficiently converted to a deterministic finite automata (DFA) in subexponential space/time?" "Twenty years ago, I built an regular expression package that included conversions from regular expressions to a finite state machine (DFA) and supported a host of closed regular expression  operations (Kleene star, concatenation, reverse, set operations, etc). I was unsure about the worst case performance of my package.
+"27" 13 "Can a nondeterministic finite automata (NDFA) be efficiently converted to a deterministic finite automata (DFA) in subexponential space/time?" "Twenty years ago, I built an regular expression package that included conversions from regular expressions to a finite state machine (DFA) and supported a host of closed regular expression  operations (Kleene star, concatenation, reverse, set operations, etc). I was unsure about the worst case performance of my package.
 
 A DFA has the same expressive power as an NDFA, because an n-state NDFA can be trivially converted to a DFA having 2^n states. However, are there any lower upper bound guarantees for such a conversion that do not require an exponential explosion in state?
 
 I was unable to come up with examples mal-behaving regular expressions or NDFAs, but I didn't spend much time thinking about it. I am guessing a regular expression like ((((e|A|B|C)*(e|D|E|F))*(e|G|H|I))*(e|J|K|L|M))* which mixes a lot of alternations and Kleene stars would have a linearly sized NDFA but an expansive DFA. 
 "
-"28" 79 "Problems Between P and NPC" "Factoring and graph isomorphism are problems in NP that are not known to be in P nor to be NP-Complete.  What are some other (sufficiently different) natural problems that share this property?  Artificial examples coming directly from the proof of Ladner's theorem do not count.
+"28" 14 "Problems Between P and NPC" "Factoring and graph isomorphism are problems in NP that are not known to be in P nor to be NP-Complete.  What are some other (sufficiently different) natural problems that share this property?  Artificial examples coming directly from the proof of Ladner's theorem do not count.
 
 Are any of these example provably NP-intermediate, assuming only some \"reasonable\" hypothesis?
 "
-"29" 80 "Which results in complexity theory make essential use of uniformity?" "A complexity class separation proof uses uniformity of complexity classes essentially if the proof does not prove the result for nonuniform version, for example proofs based on diagonalization (like time and space hierarchy theorems) make essential use of uniformity as they need to simulate the programs in the smaller class. 
+"29" 15 "Which results in complexity theory make essential use of uniformity?" "A complexity class separation proof uses uniformity of complexity classes essentially if the proof does not prove the result for nonuniform version, for example proofs based on diagonalization (like time and space hierarchy theorems) make essential use of uniformity as they need to simulate the programs in the smaller class. 
 
 
   Which results in complexity theory (other than diagonalization proofs) use uniformity essentially?
 
 "
-"30" 82 "Where and how did computers help prove a theorem?" "The purposes of this question is to collect examples from theoretical computer science where the systematic use of computers was helpful
+"30" 16 "Where and how did computers help prove a theorem?" "The purposes of this question is to collect examples from theoretical computer science where the systematic use of computers was helpful
 
 
 in building a conjecture that lead to a theorem,

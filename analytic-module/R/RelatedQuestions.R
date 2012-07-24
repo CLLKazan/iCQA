@@ -4,7 +4,6 @@
 
 library("RMySQL")
 library("R.utils")
-#library("RTextTools")
 library("topicmodels")
 
 is.parallel <- require(doMC)
@@ -39,24 +38,28 @@ stored.lda <- paste(package.home,"/data/lda.RData",sep="")
 if(file.exists(stored.lda)){
   load(stored.lda)
 }else{
-  lda <- GetLDAModel(questions,c(16,32,48,64,128))
+  lda <- GetLDAModel(questions,c(32,64,128,256))
   save(lda, file=stored.lda)
 }
 
-questions <- PopulateWithAnswerScores(mychannel, questions)
+# add answer scores
+questions <- merge(questions, GetAnswerScores(mychannel), all.x=T)
+questions$score[is.na(questions$score)] <- 0
 
-result <- ddply(questions, c(), function(q){
+result <- ddply(questions, c("id"), function(q){
   cnd <- GetQuestionsSimilarByTags(q, questions, tags)
   if( nrow(cnd) > 0 ){
     res <- ComputeSimilarityScores(q, cnd, lda)
-    return(head(res, n=10))
+    return(head(res[res$similarity > 0,], n=10))
   }else{
     return(NULL)
   }
 }, .parallel=is.parallel)
-save(result, file=paste(package.home,"/data/res.RData",sep=""))
+
+names(result) <- c("question_id","related_question_id","similarity")
+
 dbWriteTable(mychannel, "forum_questionrelation", 
-             result[,c("question_id","related_question_id","similarity")], 
+             result, 
              overwrite=T, row.names=F)
 
 # Closing the connection

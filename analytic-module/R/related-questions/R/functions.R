@@ -1,21 +1,23 @@
-ALPHA1 <- 0.7
-ALPHA2 <- 0.2
-ALPHA3 <- 0.1
-SPARCE <- 0.995
+# weights for combining factors of question recommendation
+# the smallest weight for the most important factor
+ALPHA1 <- 0.1    # weight for topics similarity
+ALPHA2 <- 0.8    # weight for TF-IDF similarity
+ALPHA3 <- 0.9    # importance of answer quality
+
 is.parallel <- require(doMC)
 
 ComputeSimilarityScores <- function(question, candidates, lda){
-  # returns dataframe each row of which contains ID of questions 
-  # and thier similarity score
+  # returns a dataframe each row of which contains ID of question 
+  # and similarity score
   # 
   # Args:
   #  quesition:  single row cotaining given question
   #  candidates: dataframe with other questions
-  #  lda:        LDA_VEM object
+  #  lda:        LDA model object
   
   count <- nrow(candidates)
   all.docs <- rbind(candidates, question)
-  dtm <- GetDTM(cbind(all.docs$title,all.docs$body), sparseTerms=SPARCE)
+  dtm <- GetDTM(cbind(all.docs$title,all.docs$body))
                         
   mtr.idf <- as.matrix(weightTfIdf(dtm))
                         
@@ -26,14 +28,12 @@ ComputeSimilarityScores <- function(question, candidates, lda){
   similarity <- laply(1:count,function(i){
     topics.sim <- CosSim(topics.distr[i, ], question.td)
     tfidf.sim  <- CosSim(mtr.idf[i,], question.tfidf)
-    topics.sim*ALPHA1 * tfidf.sim*ALPHA2 * candidates$score[i]*ALPHA3
+    topics.sim^ALPHA1 * tfidf.sim^ALPHA2 * candidates$score[i]^ALPHA3
   }, .parallel=is.parallel)
   
   result <-  data.frame(
-        rep(question$id, count),
         candidates$id,
         similarity)
-  names(result) <- c("question_id","related_question_id","similarity")
   
   result[rev(order(result$similarity)), ]
 }
@@ -51,18 +51,16 @@ GetLDAModel <- function(questions, K=c(32,64,128)){
   #  questions: set of questions for training
   #  K:         counts of topics
   
-  dtm.tf <- GetDTM(cbind(questions$title,questions$body), sparseTerms=SPARCE)
+  dtm.tf <- GetDTM(cbind(questions$title,questions$body))
 
   ldas <- llply(K[K < nrow(dtm.tf)], function(k){
     LDA(dtm.tf, k, method="Gibbs")
   }, .parallel=is.parallel)
   
-  perps <- llply(ldas, function(l){
-    perplexity(l, dtm.tf)
-  }, .parallel=is.parallel)
+  perps <- laply(ldas, perplexity, newdata=dtm.tf, .parallel=is.parallel)
   
   #return model with minimum perplexity
-  ldas[ order(unlist(perps))[1] ][[1]]
+  ldas[ order(perps)[1] ][[1]]
 }
 
 GetQuestionsSimilarByTags <- function(q, questions, tags){
@@ -83,8 +81,8 @@ GetDTM <- function(textColumns, sparseTerms = 0){
   # with term-frequency weighting
   #
   # Args:
-  #   textColumns:       Either character vector or a cbind() of columns
-  #   removeSparseTerms: a numeric for the maximal allowed sparsity
+  #   textColumns: either character vector or a cbind() of columns
+  #   sparseTerms: a numeric for the maximal allowed sparsity
   
   control <- list(
       bounds = list(local = c(1, Inf)), 

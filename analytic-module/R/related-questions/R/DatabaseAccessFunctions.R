@@ -28,11 +28,12 @@ GetTagQuestionAssociations <- function(db.connection){
     n=-1)
 }
 
-PopulateWithAnswerScores <- function(db.connection, questions){
+GetAnswerScores <- function(db.connection){
   # returns answer scores for questions
   # score for question with marked answer is 1
   # score for question without answers is 0
-  # 
+  # otherwise - maximum score of answers divided by question's views count
+  #
   # Args:
   #   db.connection: db connection object
   #   questions:     dataframe
@@ -40,24 +41,31 @@ PopulateWithAnswerScores <- function(db.connection, questions){
   marked <- fetch(
     dbSendQuery(db.connection,
                 "SELECT 1 as score, parent_id AS id FROM forum_node\
-                          WHERE marked=1"),
+                          WHERE marked=1 AND parent_id IS NOT NULL"),
     n=-1)
 
   not.marked <- fetch(
     dbSendQuery(db.connection,
-                "SELECT MAX(score) AS score, parent_id AS id\
-                FROM forum_node\
-                WHERE node_type='answer' AND parent_id IS NOT NULL\
-                AND parent_id NOT IN\
-                  (SELECT parent_id FROM forum_node\
-                          WHERE marked=1)\
+                "SELECT MAX(score) AS score, parent_id AS id
+                FROM forum_node
+                LEFT JOIN
+                (SELECT DISTINCT(parent_id), 1 as mkd
+                FROM forum_node WHERE marked = 1) t USING (parent_id)
+                WHERE mkd IS NULL
+                AND node_type = 'answer'
+                AND parent_id IS NOT NULL
                 GROUP BY parent_id"),
     n=-1)
-    
-  #normalize scores
-  not.marked$score <- not.marked$score/(max(not.marked$score)+1)
   
-  questions <- merge(questions, rbind(marked, not.marked), all.x=T)
-  questions$score[is.na(questions$score)] <- 0
-  questions
+  hits <- fetch(
+    dbSendQuery(db.connection,
+                "SELECT id, extra_count FROM forum_node
+                          WHERE node_type='question'"),
+    n=-1)
+    
+  not.marked <- merge(not.marked, hits)
+  not.marked$score <- not.marked$score/not.marked$extra_count
+  not.marked$score[is.na(not.marked$score)] <- 0
+  
+  return(rbind(marked, not.marked[,c("id","score")]))
 }
