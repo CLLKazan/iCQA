@@ -25,7 +25,7 @@ Please avoid asking questions that are not relevant to this community, are too s
 
 **What should I avoid in my answers?**
 
-OSQA: Open Source Q&A Forum is a question and answer site - it is not a discussion group. Please avoid holding debates in your answers as they tend to dilute the essense of questions and answers. For brief discussions please use commenting facility.
+iCQA: Intelligent Community  Q&A Forum is a question and answer site - it is not a discussion group. Please avoid holding debates in your answers as they tend to dilute the essense of questions and answers. For brief discussions please use commenting facility.
 
 ** Why are email notifications so important? **
 

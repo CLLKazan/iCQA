@@ -40,7 +40,7 @@ help_text = "Tips visible on the ask or edit questions page about good tagging."
 required=False))
 
 
-SIDEBAR_UPPER_SHOW = Setting('SIDEBAR_UPPER_SHOW', True, SIDEBAR_SET, dict(
+SIDEBAR_UPPER_SHOW = Setting('SIDEBAR_UPPER_SHOW', False, SIDEBAR_SET, dict(
 label = "Show Upper Block",
 help_text = "Check if your pages should display the upper sidebar block.",
 required=False))
@@ -72,7 +72,7 @@ widget=Select(choices=RENDER_CHOICES),
 required=False))
 
 
-SIDEBAR_LOWER_SHOW = Setting('SIDEBAR_LOWER_SHOW', True, SIDEBAR_SET, dict(
+SIDEBAR_LOWER_SHOW = Setting('SIDEBAR_LOWER_SHOW', False, SIDEBAR_SET, dict(
 label = "Show Lower Block",
 help_text = "Check if your pages should display the lower sidebar block.",
 required=False))

@@ -4,7 +4,7 @@ from django.forms.widgets import RadioSelect
 from base import Setting, SettingSet
 from django.utils.translation import ugettext as _
 
-USERS_SET = SettingSet('users', _('Users settings'), _("General settings for the OSQA users."), 20)
+USERS_SET = SettingSet('users', _('Users settings'), _("General settings for the iCQA users."), 20)
 
 EDITABLE_SCREEN_NAME = Setting('EDITABLE_SCREEN_NAME', False, USERS_SET, dict(
 label = _("Editable screen name"),
