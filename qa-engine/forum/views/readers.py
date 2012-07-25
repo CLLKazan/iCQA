@@ -370,7 +370,7 @@ def question(request, id, slug='', answer=None):
 
     from django.db import connection, transaction
     cursor = connection.cursor()
-    cursor.execute("SELECT a.user_id, a.score FROM analytics_answerer_recommendation a WHERE a.question_id=%s AND NOT EXISTS (SELECT * FROM forum_node f WHERE f.id=a.question_id AND f.author_id=a.user_id) AND NOT EXISTS (SELECT * FROM forum_node f2 WHERE f2.parent_id=a.question_id AND f2.author_id=a.user_id) AND NOT EXISTS (SELECT * FROM forum_node f3 WHERE f3.parent_id=a.question_id AND f3.marked=1) ORDER BY score DESC LIMIT 12", [question.id])
+    cursor.execute("SELECT a.user_id, a.score FROM analytics_answerer_recommendation a WHERE a.question_id=%s AND NOT EXISTS (SELECT * FROM forum_node f WHERE f.id=a.question_id AND f.author_id=a.user_id) AND NOT EXISTS (SELECT * FROM forum_node f2 WHERE f2.parent_id=a.question_id AND f2.author_id=a.user_id) AND NOT EXISTS (SELECT * FROM forum_node f3 WHERE f3.parent_id=a.question_id AND f3.marked=1) ORDER BY score ASC LIMIT 12", [question.id])
     row_list = cursor.fetchall()
     user_list = []
 
