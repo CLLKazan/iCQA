@@ -1,11 +1,13 @@
-TrainUQA <- function(dtm, user.profiles, max.iteration=50) {
+TrainUQA <- function(dtm, user.profiles, max.iteration=50, optimizeTopicNumber=F) {
   # Trains a UQA model proposed in the paper J. Guo et al. "Tapping on the Potential
   # of Q&A community by recommending answer providers" (2008)
   #
   # Args:
-  #   dtm:     document-term matrix
-  #   user.profiles:  user profiles 
-  #   max.iteration:  maximum number of iterations
+  #   dtm:                  document-term matrix
+  #   user.profiles:        user profiles 
+  #   max.iteration:        maximum number of iterations
+  #   optimizeTopicNumber:  boolean, whether the topic number optimization is required,
+  #                         if FALSE, the topic number is set to 16
   #
   # Returns:
   #   Trained UQA model
@@ -16,7 +18,11 @@ TrainUQA <- function(dtm, user.profiles, max.iteration=50) {
   require(iterators)  
   
   users <- unique(user.profiles$user_id)
-  topic.numbers <- seq(20, 40, by=20)
+  if (optimizeTopicNumber) {
+    topic.numbers <- c(16, 32, 64, 128)
+  } else {
+    topic.numbers <- c(16)
+  }
   perplexities <- rep(NA, length(topic.numbers))
   models <- list()
 
