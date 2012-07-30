@@ -1,8 +1,8 @@
-# weights for combining factors of question recommendation
-# the smallest weight for the most important factor
-ALPHA1 <- 0.1    # weight for topics similarity
-ALPHA2 <- 0.8    # weight for TF-IDF similarity
-ALPHA3 <- 0.9    # importance of answer quality
+# weights for combining factors in the result score
+ALPHA_TP <- 0.7    # weight for topics similarity
+ALPHA_TF <- 0.4    # weight for TF-IDF similarity
+ALPHA_AQ <- 0.3    # importance of answer quality
+ALPHA_FR <- 0.1    # importance of freshness score
 
 is.parallel <- require(doMC)
 
@@ -28,7 +28,8 @@ ComputeSimilarityScores <- function(question, candidates, lda){
   similarity <- laply(1:count,function(i){
     topics.sim <- CosSim(topics.distr[i, ], question.td)
     tfidf.sim  <- CosSim(mtr.idf[i,], question.tfidf)
-    topics.sim^ALPHA1 * tfidf.sim^ALPHA2 * candidates$score[i]^ALPHA3
+    topics.sim^ALPHA_TP * tfidf.sim^ALPHA_TF *
+      candidates$score[i]^ALPHA_AQ * question$freshness^ALPHA_FR
   }, .parallel=is.parallel)
   
   result <-  data.frame(
@@ -74,6 +75,21 @@ GetQuestionsSimilarByTags <- function(q, questions, tags){
   q.tags <- tags[tags$node_id == q$id,]$tag_id
   cnd.id <- tags[tags$tag_id %in% q.tags, ]$node_id
   questions[questions$id %in% cnd.id[cnd.id != q$id], ]
+}
+
+ComputeFreshness <- function(q, time.words.re){
+  # computes freshness score for given question if it contains trigger words
+  # if question doesn't contain trigger words then freshness is set to 1
+  # 
+  # Args:
+  #   q:             single question
+  #   time.words.re: regular expression containing trigger words
+  
+  if( length(grep(time.words.re, c(q$title,q$body), ignore.case=T)) > 0 ){
+    return(1/as.integer(Sys.Date() - as.Date(q$added_at)))
+  }else{
+    return(1)
+  }
 }
 
 GetDTM <- function(textColumns, sparseTerms = 0){

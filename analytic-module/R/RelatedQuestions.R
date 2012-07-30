@@ -27,12 +27,19 @@ mychannel <-
             host="localhost", password=db.configuration$password)
 
 questions <- GetQuestions(mychannel)
-tags <- GetTagQuestionAssociations(mychannel)
 
-#removing HTML tags
-questions$body <- unlist(llply(questions$body, function(q){
+# removing HTML tags
+questions$body <- laply(questions$body, function(q){
   gsub("<[^>]+>","",q)
-}, .parallel=is.parallel))
+}, .parallel=is.parallel)
+
+# make regex containig trigger words for computing freshness
+tw <- paste(
+        scan(paste(package.home,"inst/trigger.words",sep="/"), character()),
+        collapse="|")
+
+questions$freshness <- daply(questions, c("id"), ComputeFreshness, 
+                             time.words.re=tw, .parallel=is.parallel)
 
 stored.lda <- paste(package.home,"/data/lda.RData",sep="")
 if(file.exists(stored.lda)){
@@ -45,6 +52,8 @@ if(file.exists(stored.lda)){
 # add answer scores
 questions <- merge(questions, GetAnswerScores(mychannel), all.x=T)
 questions$score[is.na(questions$score)] <- 0
+
+tags <- GetTagQuestionAssociations(mychannel)
 
 result <- ddply(questions, c("id"), function(q){
   cnd <- GetQuestionsSimilarByTags(q, questions, tags)

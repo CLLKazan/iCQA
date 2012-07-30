@@ -6,7 +6,7 @@ GetQuestions <- function(db.connection) {
   
   results <- 
     dbSendQuery(db.connection,
-                "SELECT id, title, body FROM forum_node 
+                "SELECT id, title, body, added_at FROM forum_node 
                  WHERE node_type='question' AND state_string!='(deleted)'")
                       
   fetch(results, n=-1)
