@@ -215,7 +215,7 @@ class Node(BaseModel, NodeContent):
     parent               = models.ForeignKey('Node', related_name='children', null=True)
     abs_parent           = models.ForeignKey('Node', related_name='all_children', null=True)
 
-    added_at             = models.DateTimeField(default=datetime.datetime.now)
+    added_at             = models.DateTimeField(auto_now_add=True)
     score                 = models.IntegerField(default=0)
 
     state_string          = models.TextField(default='')
@@ -226,6 +226,8 @@ class Node(BaseModel, NodeContent):
 
     tags                 = models.ManyToManyField('Tag', related_name='%(class)ss')
     active_revision       = models.OneToOneField('NodeRevision', related_name='active', null=True)
+
+    related_questions    = models.ManyToManyField('Node', related_name='%(class)ss', through='QuestionRelation')
 
     extra = PickledObjectField()
     extra_ref = models.ForeignKey('Node', null=True)
@@ -452,6 +454,15 @@ class NodeRevision(BaseModel, NodeContent):
 
     class Meta:
         unique_together = ('node', 'revision')
+        app_label = 'forum'
+        
+class QuestionRelation(models.Model):
+    question         = models.ForeignKey(Node, related_name='question')
+    related_question = models.ForeignKey(Node, related_name='related_question')
+    similarity       = models.FloatField()
+    
+    class Meta:
+        unique_together = ('question', 'related_question')
         app_label = 'forum'
 
 
