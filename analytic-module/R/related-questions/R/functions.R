@@ -74,7 +74,8 @@ GetQuestionsSimilarByTags <- function(q, questions, tags){
   
   q.tags <- tags[tags$node_id == q$id,]$tag_id
   cnd.id <- tags[tags$tag_id %in% q.tags, ]$node_id
-  questions[questions$id %in% cnd.id[cnd.id != q$id], ]
+  result <- questions[questions$id %in% cnd.id[cnd.id != q$id], ]
+  return(result[result$score > 0, ])
 }
 
 ComputeFreshness <- function(q, time.words.re){

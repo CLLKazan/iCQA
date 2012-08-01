@@ -14,7 +14,6 @@ GetQuestions <- function(db.connection) {
 
 GetTagQuestionAssociations <- function(db.connection){
   # returns the 'forum_node_tags' table 
-  # except for rows with questions without answer
   #
   # Args:
   #   db.connection: db connection object
@@ -23,8 +22,8 @@ GetTagQuestionAssociations <- function(db.connection){
     dbSendQuery(db.connection,
                 "SELECT node_id, tag_id FROM forum_node_tags\
                 WHERE node_id IN\
-                  (SELECT DISTINCT(parent_id) FROM forum_node\
-                          WHERE node_type='answer')"), 
+                  (SELECT id FROM forum_node 
+                 WHERE node_type='question' AND state_string!='(deleted)')"), 
     n=-1)
 }
 

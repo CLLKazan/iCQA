@@ -7,7 +7,7 @@ test_GetQuestionsSimilarByTags <- function(){
   )
   names(tags) <- c("node_id","tag_id")
   cnd <- GetQuestionsSimilarByTags(questions[1,], questions[2:nrow(questions),], tags)
-  checkEquals(cnd$id, c(2,4,5))
+  checkEquals(cnd$id, 4)
 }
 
 test_ComputeFreshness <- function(){
