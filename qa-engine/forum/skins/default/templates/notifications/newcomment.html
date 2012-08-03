@@ -1,0 +1,46 @@
+{% load i18n extra_tags email_tags %}
+
+{% declare %}
+    prefix = html.mark_safe(settings.EMAIL_SUBJECT_PREFIX)
+    post = comment.parent
+    question = post.question and post.question or post
+    post_author = post.author.username
+    safe_post_author = html.mark_safe(post.author.username)
+    comment_author = html.mark_safe(comment.author)
+    question_title = html.mark_safe(question.title)
+    safe_body = html.html2text(comment.comment)
+    author_link = html.objlink(comment.author, style=settings.EMAIL_ANCHOR_STYLE)
+    question_link = html.objlink(question, style=settings.EMAIL_ANCHOR_STYLE)
+{% enddeclare %}
+
+{% email %}
+    {% subject %}{% blocktrans %}{{ prefix }} New comment on: {{ question_title }}{% endblocktrans %}{% endsubject %}
+
+    {% htmlcontent notifications/base.html %}
+        <p style="{{ p_style }}">
+            {% blocktrans %}{{ author_link }} has just posted a comment on {% endblocktrans %}
+            {% ifnotequal post question %}
+                {% blocktrans %}the answer posted by {{ post_author }} to {% endblocktrans %}
+            {% endifnotequal %}
+            {% blocktrans %}the question {{ question_link }}{% endblocktrans %}
+        </p>
+
+        <blockquote>
+        {{ comment.comment }}
+        </blockquote>
+
+        <p style="{{ p_style }}">{% trans "Don't forget to come over and cast your vote." %}</p>
+    {% endhtmlcontent %}
+
+{% textcontent notifications/base_text.html %}
+{% blocktrans %}{{ comment_author }} has just posted a comment on {% endblocktrans %}
+{% ifnotequal post question %}
+{% blocktrans %}the answer posted by {{ safe_post_author }} to {% endblocktrans %}
+{% endifnotequal %}
+{% blocktrans %}the question "{{ question_title }}"{% endblocktrans %}
+{{ safe_body }}
+
+{% trans "Don't forget to come over and cast your vote." %}
+{% endtextcontent %}
+
+{% endemail %}

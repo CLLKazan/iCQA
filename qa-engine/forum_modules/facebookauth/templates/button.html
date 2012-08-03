@@ -1,0 +1,38 @@
+<script src="http://static.ak.connect.facebook.com/js/api_lib/v0.4/FeatureLoader.js.php/en_US" type="text/javascript"></script>
+<script type="text/javascript">
+    var FB_API_KEY = "{{ provider.API_KEY }}";
+    var FB_CHANNEL_PATH = "{% url  xd_receiver %}";
+
+    FB.init(FB_API_KEY, FB_CHANNEL_PATH, {permsToRequestOnConnect : "email"});
+
+    function FB_ConnectPostAuthorization() {
+        if ($('#validate_email').attr('checked')) {
+            FB_RequireFeatures(["Api"], function(){
+                var api = FB.Facebook.apiClient;
+                var fb_uid = api.get_session().uid;
+
+                $.post('{% url  facebook_user_is_registered %}', {'fb_uid': fb_uid}, function(response) {
+                    if (response != "yes") {
+                        api.users_hasAppPermission("email", function(result) {
+                            if (!result) {
+                                FB.Connect.showPermissionDialog("email", redirect_to_done_page);
+                            } else {
+                                redirect_to_done_page()
+                            }
+                        })
+                    } else {
+                        redirect_to_done_page()
+                    }
+                });
+            });
+        } else {
+            redirect_to_done_page();
+        }
+    }
+
+    function redirect_to_done_page() {
+        window.location = "{% url auth_provider_done provider=provider.id %}";
+    }
+
+</script>
+<fb:login-button v="2" size="medium" onlogin="FB_ConnectPostAuthorization()">Facebook</fb:login-button>

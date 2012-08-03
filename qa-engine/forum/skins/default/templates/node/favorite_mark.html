@@ -1,0 +1,8 @@
+{% load i18n %}
+
+<a id="favorite-mark" title="{% trans "mark/unmark this question as favorite (click again to cancel)" %}"
+    class="ajax-command favorite-mark {% if favorited %} on{% endif %}"
+    href="{% url mark_favorite id=question.id %}" rel="nofollow"> </a>
+<div id="favorite-count" class="favorite-count">
+   {% if favorite_count %}{{ favorite_count }}{% endif %}
+</div>

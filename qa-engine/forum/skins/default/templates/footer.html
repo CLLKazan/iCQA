@@ -1,0 +1,19 @@
+{% load extra_tags ui_registry i18n %}
+
+
+<div>
+    <div class="footerLinks" >
+        {% loadregistry footer_links %}<span class="link-separator"> |</span>{% endloadregistry %}
+    </div>
+  <p>
+     <a href="http://cllkazan.github.com/iCQA/" target="_blank" title="iCQA">
+        powered by iCQA
+     </a>
+  </p>
+</div>
+ <div id="licenseLogo">
+  <a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/">
+            <img src="{% media  "/media/images/by-sa-88x31.png" %}"" title="Creative Commons: Attribution - Share Alike" alt="cc-by-sa" width="88" height="31" />
+  </a>
+ </div>
+

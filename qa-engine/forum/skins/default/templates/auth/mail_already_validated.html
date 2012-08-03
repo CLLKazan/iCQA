@@ -1,0 +1,17 @@
+{% extends "base_content.html" %}
+<!-- complete.html -->
+{% load i18n %}
+{% block head %}{% endblock %}
+{% block title %}{% spaceless %}{% trans "This e-mail has already been validated" %}{% endspaceless %}{% endblock %}
+{% block content %}
+
+<div class="error">
+
+<h1>{% blocktrans %}Already validated{% endblocktrans %}</h1>
+
+<p>{% blocktrans %}This e-mail has already been validated{% endblocktrans %}</p>
+
+</div>
+
+{% endblock %}
+<!-- end complete.html -->

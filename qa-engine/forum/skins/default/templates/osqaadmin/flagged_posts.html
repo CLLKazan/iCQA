@@ -1,0 +1,25 @@
+{% extends basetemplate %}
+
+{% load i18n %}
+{% load user_tags %}
+
+{% block subtitle %}{% trans "Flagged Posts" %}{% endblock %}
+{% block pagename %}{% trans "Flagged Posts" %}{% endblock %}
+{% block description %}{% trans "This are the posts that have been flagged by users." %}{% endblock %}
+
+{% block admincontent %}
+    <div class="module" style="width:98%; display: inline-block;">
+        <table width="100%">
+        <caption>{% trans "Flagged Posts" %}</caption>
+            <tr>
+                <td colspan="2">
+                    <table width="100%">
+                    {% for post in flagged_posts %}
+                        <tr><td>{% flagged_item post request.user %}</td></tr>
+                    {% endfor %}
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
+{% endblock %}

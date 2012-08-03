@@ -1,0 +1,33 @@
+{% extends basetemplate %}
+
+{% load i18n %}
+
+{% block subtitle %}
+    {% trans "XML data exporter" %}
+{% endblock %}
+{% block description %}
+    {% trans "Export database to XML format" %}
+{% endblock %}
+
+{% block admincontent %}
+<p>
+    <strong>{% trans "Available backups" %}</strong>
+</p>
+<ul>
+    {% for b in available %}
+    <li>
+        {{ b.date }} by {{ b.author }}
+    </li>
+    {% endfor %}
+</ul>
+
+<p>
+    <strong>{% trans "Start new backup" %}</strong>
+</p>
+<form method="POST" action="">
+    <table>
+    {{ form.as_table }}
+    </table>
+    <input type="submit" name="start" value="{% trans "Start" %}" />
+</form>
+{% endblock %}

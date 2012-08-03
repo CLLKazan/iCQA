@@ -1,0 +1,165 @@
+{% extends basetemplate %}
+
+{% load i18n %}
+
+{% block subtitle %}
+    {% ifequal mode "exporter" %}{% trans "XML data exporter" %}{% else %}{% trans "XML data importer" %}{% endifequal %}
+{% endblock %}
+{% block description %}
+    {% ifequal mode "exporter" %}{% trans "Export database to XML format" %}{% else %}{% trans "Restore data from a previouus export" %}{% endifequal %}
+{% endblock %}
+
+{% block adminjs %}
+    <style type="text/css">
+        .state_bar {
+            width:100%;
+            height: 20px;
+            border: 1px solid black;
+            margin-bottom: 15px;
+            position: relative;
+            background: #FDF;
+        }
+
+        .state_label {
+            margin-left: auto;
+            margin-right: auto;
+            z-index: 1000;
+            position: absolute;
+            left: 0px;
+            top: 0px;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+        }
+
+        .progress {
+            position: absolute;
+            left: 0px;
+            top: 0px;
+            width: 0%;
+            height: 100%;
+            background: #DFF;
+            z-index: 0;
+        }
+
+        #download_link {
+            display: none;
+        }
+    </style>
+
+    <script type="text/javascript">
+    $(function() {
+        var exporting = {% ifequal mode "exporter" %}true{% else %}false{% endifequal %};
+
+        var state = null;
+
+        function set_state(name, data) {
+            var $bar = $('#state_' + name);
+
+            if (data[name] === undefined) {
+                $bar.find('.state_label').html('{% trans "Skiped" %}')
+            } else if (state == null || data[name] != state[name]) {
+                var width = $bar.width();
+
+                $bar.find('.state_parsed').html(data[name].parsed);
+                $bar.find('.state_count').html(data[name].count);
+                $bar.find('.state_status').html(data[name].status);
+
+                var rel_parse = data[name].parsed / data[name].count;
+
+                $bar.find('.state_percentage').html(parseInt(rel_parse * 100) + '%');
+                $bar.find('.progress').css('width', parseInt(rel_parse * width) + 'px')
+            }
+        }
+
+        function check_state() {
+            var done = false;
+
+             function callback(data) {
+                if (done) {
+                   return;
+                }
+                set_state('overall', data.state);
+                {% for s in steps %}
+                    set_state('{{ s.id }}', data.state);
+                {% endfor %}
+
+                $('#time_started').html(data.time_started);
+
+                state = data;
+
+                if (data.running) {
+                    check_state();
+                } else {
+                    if (data.errors == false) {
+                        if (exporting) {
+                            $('#wait_message').html('{% trans "Your backup is ready to be downloaded."%}');
+                            $('#download_link_a').attr('href', '{% url exporter_download %}?file=' + data.state.overall.fname)
+                            $('#download_link').slideDown();
+                        } else {
+                            $('#wait_message').html('{% trans "All data sucessfully imported."%}')
+                        }
+                    } else {
+                        var msg;
+                        if (exporting) {
+                            msg = '{% trans "An error has occurred during de export proccess"%}';
+                        } else {
+                            msg = '{% trans "An error has occurred during de import proccess"%}';
+                        }
+                        $('#wait_message').html(msg + ': ' + data.errors + '<br />' +
+                        '{% trans "Please check the log file for a full stack trace." %}')
+                    }
+                }
+
+                done = true;
+             }
+
+             window.setTimeout(function() {
+                if (!done) {
+                    done = true;
+                    check_state();
+                }
+             }, 1000);
+
+             $.getJSON('{% url exporter_state %}', callback);
+        }
+
+        check_state();
+    });
+    </script>
+{% endblock %}
+
+{% block admincontent %}
+    <p id="wait_message">
+        {% ifequal mode "exporter" %}
+            {% trans "Please wait while we prepare your backup file to download." %}
+        {% else %}
+            {% trans "Please wait while we import your data." %}
+        {% endifequal %} -
+        {% blocktrans %}
+            Started <span id="time_started"></span>
+        {% endblocktrans %}
+    </p>
+    <p id="download_link"><a id="download_link_a" href="#">{% trans "Download file" %}</a></p>
+    <table style="width: 100%">
+        <tr>
+            <td colspan="2">
+                <div class="state_bar" id="state_overall">
+                    <div class="state_label"><span class="state_status"></span> ({% trans "Total progress" %}: <span class="state_percentage">0%</span>)</div>
+                    <div class="progress"></div>
+                </div>
+            </td>
+        </tr>
+        {% for s in steps %}
+        <tr>
+            <td>{{ s.name }}:</td>
+            <td width="100%">
+                <div class="state_bar" id="state_{{ s.id }}">
+                    <div class="state_label"><span class="state_status"></span> - </span><span class="state_parsed">0</span> {% trans " of " %} <span class="state_count">{% trans "unknown" %}</span> (<span class="state_percentage">0%</span>)</div>
+                    <div class="progress"></div>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+{% endblock %}

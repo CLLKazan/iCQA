@@ -1,0 +1,13 @@
+{% load i18n %}
+
+<div class="boxC">
+	<h3>{% trans "Recent tags" %}</h3>
+	<div class="body">
+         <div class="tags" id="recent-tags">
+        {% for tag in tags %}
+            <a rel="tag" class="tag-link-{{ tag.name }}" title="{% blocktrans with tag.name as tagname %}see questions tagged '{{tagname}}'{% endblocktrans %}" href="{% url tag_questions tag.name|urlencode %}">{{ tag.name }}</a>
+        {% endfor %}
+        </div>
+        <div class="more"><a href="{% url tags %}">{% trans "popular tags" %} </a> </div>
+    </div>
+</div>

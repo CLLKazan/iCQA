@@ -1,0 +1,54 @@
+#admin_form {
+    border-spacing: 10px;
+}
+
+#admin_form input[type="text"], #admin_form input[type="submit"], #admin_form textarea, .string_list_widget_button {
+    line-height: 22px;
+    font-size: 140%;
+    font-family: sans-serif;
+    border: 1px solid #999;
+    color: black;
+}
+
+#admin_form input[type="text"], #admin_form input[type="submit"], .string_list_widget_button {
+    height: 28px;
+}
+
+#admin_form input[type="text"], #admin_form textarea {
+    width: 550px;    
+}
+
+#admin_form th {
+    text-align: left;
+    vertical-align: top;
+}
+
+#admin_form td {
+    color: gray;
+}
+
+#admin_page_description {
+    color: gray;
+    padding-bottom: 20px;
+}
+
+.string_list_widget input[type=text] {
+    width: 520px;
+}
+
+.string_list_widget_button {
+    width: 28px;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.string_list_widget_button.add {
+    position: relative;
+    left: 554px;
+}
+
+table caption {
+    font-size: 120%;
+	padding: 3px 0;
+    text-align: left;
+}

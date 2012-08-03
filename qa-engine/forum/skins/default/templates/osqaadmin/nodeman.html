@@ -1,0 +1,513 @@
+{% extends basetemplate %}
+
+{% load i18n user_tags extra_tags extra_filters %}
+
+{% block adminjs %}
+    <script type="text/javascript">
+        $(function() {
+            var $form = $('#changelist-search');
+
+            $('#all-node-type-link').click(function() {
+                $('#type-filter-container').find('input').remove();
+                $form.submit();
+            });
+
+            $('.node-type-link').click(function() {
+                var link_type = $(this).attr('href').substring(1);
+
+                if ($('#type-filter-container').find('input[value=' + link_type + ']').length == 0) {
+                    $('#type-filter-container').append($("<input name=\"node_type\" type=\"hidden\" value=\"" + link_type + "\" />"));
+                } else {
+                    $('#type-filter-container').find('input[value=' + link_type + ']').remove();
+                }
+
+                $form.submit();                
+            });
+
+            $('#all-state-link').click(function() {
+                $('#state-filter-container').find('input').remove();
+                $form.submit();
+            });
+
+            $('.state-type-link').click(function() {
+                var state_type = $(this).attr('href').substring(1);
+
+                if ($('#state-filter-container').find('input[value=' + state_type + ']').length == 0) {
+                    $('#state-filter-container').append($("<input name=\"state_type\" type=\"hidden\" value=\"" + state_type + "\" />"));
+                } else {
+                    $('#state-filter-container').find('input[value=' + state_type + ']').remove();
+                }
+
+                $form.submit();
+            });
+
+            $('.action-select').change(function() {
+                $('#action-toggle').removeAttr('checked');
+                var $tr = $(this).parents('tr');
+                if ($(this).attr('checked')) {
+                    $tr.addClass('selected');
+                } else {
+                    $tr.removeClass('selected');
+                }
+            }).change();
+
+            $('#action-toggle').change(function() {
+                var $rows = $('#result_list').find('tbody').find('tr');
+                var $boxes = $('#result_list').find('tbody').find('input');
+
+                if ($(this).attr('checked')) {
+                    $rows.addClass('selected');
+                    $boxes.attr('checked', 'checked')
+                } else {
+                    $rows.removeClass('selected');
+                    $boxes.removeAttr('checked');
+                }
+            });
+
+            $('#author-selector').autocomplete('{% url matching_users %}', {
+                minChars: 1,
+                matchContains: true,
+                max: 10,
+
+                formatItem: function(row, i, max, value) {
+                    return row[1] + ' (' + row[2] + ' {% trans "rep" %})';
+                },
+
+                formatResult: function(row, i, max, value){
+                    return row[1];
+                }
+            });
+
+            $('#author-selector').result(function(event, data, formatted) {
+                if ($('#author-filter-container').find('input[value=' + data[0] + ']').length == 0) {
+                    $('#author-filter-container').append($("<input name=\"authors\" type=\"hidden\" value=\"" + data[0] + "\" />"));
+                    $form.submit();
+                }
+            });
+
+            $('.author-filter-remover').click(function() {
+                var id = $(this).attr('rel');
+                if ($('#author-filter-container').find('input[value=' + id + ']').length > 0) {
+                    $('#author-filter-container').find('input[value=' + id + ']').remove();
+                    $form.submit();
+                }
+            });
+
+            $('#tag-selector').autocomplete('{% url matching_tags %}', {
+                minChars: 1,
+                matchContains: true,
+                max: 10,
+
+                formatItem: function(row, i, max, value) {
+                    return row[1] + ' (' + row[2] + ' {% trans "uses" %})';
+                },
+
+                formatResult: function(row, i, max, value){
+                    return row[1];
+                }
+            });
+
+            $('#tag-selector').result(function(event, data, formatted) {
+                if ($('#tag-filter-container').find('input[value=' + data[0] + ']').length == 0) {
+                    $('#tag-filter-container').append($("<input name=\"tags\" type=\"hidden\" value=\"" + data[0] + "\" />"));
+                    $form.submit();
+                }
+            });
+
+            $('.tag-filter-remover').click(function() {
+                var id = $(this).attr('rel');
+                if ($('#tag-filter-container').find('input[value=' + id + ']').length > 0) {
+                    $('#tag-filter-container').find('input[value=' + id + ']').remove();
+                    $form.submit();
+                }
+            });
+
+            $('#filter-name-box').one('focus', function() {
+                $(this).val('');
+                $(this).css('color', 'black');
+            });
+
+            $('#filter-name-box').keyup(function() {
+                if ($(this).val().trim().length > 0) {
+                    $('#save-filter-button').removeAttr('disabled');
+                    $('#save-filter-button').css('color', 'black');
+                } else {
+                    $('#save-filter-button').css('color', '#AAA');
+                    $('#save-filter-button').attr('disabled', 'disabled');
+                }
+            });
+
+            var resize_data = null;
+
+            $('.col-resizer').mousedown(function(e) {
+                var $to_resize = $(this).prev();
+
+                resize_data = {
+                    resizer: $(this),
+                    to_resize: $to_resize,
+                    start_width: $to_resize.innerWidth(),
+                    x_start: e.pageX,
+                }
+            });
+
+            $('body').mousemove(function(e) {
+                if (resize_data != null) {
+                    var new_size = (resize_data.start_width - (resize_data.x_start - e.pageX)) + 'px';
+                    resize_data.to_resize.css({'max-width': new_size, 'min-width': new_size})
+                    resize_data.resizer.css('max-width', '3px');
+                }
+            });
+
+            $('body').mouseup(function() {
+                if (resize_data != null)
+                    resize_data = null;
+            });
+
+            $('#filter-panel-header').click(function() {
+                $('#filter-panel').slideToggle();
+            });
+
+            $('#state-filter-type').change(function() {
+                $('#state-filter-type-hidden').val($(this).val());
+                $form.submit();
+            });
+            
+            $('#reset-text-filter').click(function() {
+                $('#text-filter-input').val('');
+                $form.submit();
+                return false;
+            });
+        });
+    </script>
+    <style>
+        #toolbar ul li {
+            list-style-type: none;
+            display: inline;
+            margin-right: 12px;
+        }
+
+        #result_list tr td.deleted {
+            background-color: #FDD;
+            border-bottom: 1px solid #a9a9a9;
+        }
+
+        #result_list tr td.accepted {
+            background-color: #DFD;
+            border-bottom: 1px solid #a9a9a9;
+        }
+
+        span.question-deleted {
+            text-decoration: line-through;
+        }
+
+        .col-resizer {
+            width: 2px;
+            min-width: 2px;
+            min-width: 2px;
+            cursor: col-resize;
+            padding: 0 0 0 0;
+        }
+    </style>
+    <script type="text/javascript">window.__admin_media_prefix__ = "{{ settings.ADMIN_MEDIA_PREFIX }}";</script>
+    <link href="{{ settings.ADMIN_MEDIA_PREFIX }}css/base.css" rel="stylesheet" type="text/css" media="screen" />
+    <script type="text/javascript">
+    /* gettext identity library */
+
+    function gettext(msgid) { return msgid; }
+    function ngettext(singular, plural, count) { return (count == 1) ? singular : plural; }
+    function gettext_noop(msgid) { return msgid; }
+
+    function interpolate(fmt, obj, named) {
+      if (named) {
+        return fmt.replace(/%\(\w+\)s/g, function(match){return String(obj[match.slice(2,-2)])});
+      } else {
+        return fmt.replace(/%s/g, function(match){return String(obj.shift())});
+      }
+    }
+
+    /* formatting library */
+
+    var formats = new Array();
+
+    formats['DATETIME_FORMAT'] = 'N j, Y, P';
+    formats['DATE_FORMAT'] = 'N j, Y';
+    formats['DECIMAL_SEPARATOR'] = '.';
+    formats['MONTH_DAY_FORMAT'] = 'F j';
+    formats['NUMBER_GROUPING'] = '0';
+    formats['TIME_FORMAT'] = 'P';
+    formats['FIRST_DAY_OF_WEEK'] = '0';
+    formats['TIME_INPUT_FORMATS'] = ['%H:%M:%S', '%H:%M'];
+    formats['THOUSAND_SEPARATOR'] = ',';
+    formats['DATE_INPUT_FORMATS'] = ['%Y-%m-%d', '%m/%d/%Y', '%m/%d/%y', '%b %d %Y', '%b %d, %Y', '%d %b %Y', '%d %b, %Y', '%B %d %Y', '%B %d, %Y', '%d %B %Y', '%d %B, %Y'];
+    formats['YEAR_MONTH_FORMAT'] = 'F Y';
+    formats['SHORT_DATE_FORMAT'] = 'm/d/Y';
+    formats['SHORT_DATETIME_FORMAT'] = 'm/d/Y P';
+    formats['DATETIME_INPUT_FORMATS'] = ['%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y-%m-%d', '%m/%d/%Y %H:%M:%S', '%m/%d/%Y %H:%M', '%m/%d/%Y', '%m/%d/%y %H:%M:%S', '%m/%d/%y %H:%M', '%m/%d/%y'];
+
+    function get_format(format_type) {
+        var value = formats[format_type];
+        if (typeof(value) == 'undefined') {
+          return msgid;
+        } else {
+          return value;
+        }
+    }
+    
+    </script>
+    <script type="text/javascript" src="{{ settings.ADMIN_MEDIA_PREFIX }}js/core.js"></script>
+{% endblock %}
+
+{% block subtitle %}
+    {% trans "Node manager" %}
+{% endblock %}
+{% block description %}
+    {% trans "Nodes bulk management" %}
+{% endblock %}
+
+{% block admincontent %}
+    <div id="changelist" class="module filtered">
+        <div id="toolbar">
+            <form method="get" action="" id="changelist-search">
+            <div>
+                <div>
+                    <label><img alt="Search" src="{{ settings.ADMIN_MEDIA_PREFIX }}img/admin/icon_searchbox.png"></label>
+                    <input type="text" size="40" name="text" id="text-filter-input" value="{{ text }}">
+                    <input type="submit" value="{% trans "Search" %}">
+                    {% if text %}
+                        <small><a href="#" id="reset-text-filter">{% trans "reset text filter" %}</a></small>
+                    {% endif %}
+                    <br />
+                    <ul>
+                        <li>
+                            <label>
+                                <input type="radio" name="text_in" value="title"{% ifequal text_in "title" %} checked="checked"{% endifequal %} />
+                            {% trans "Title" %}</label>
+                        </li>
+                        <li>
+                            <label>
+                                <input type="radio" name="text_in" value="body"{% ifequal text_in "body" %} checked="checked"{% endifequal %} />
+                            {% trans "Body" %}</label>
+                        </li>
+                        <li>
+                            <label>
+                                <input type="radio" name="text_in" value="both"{% ifequal text_in "both" %} checked="checked"{% endifequal %} />
+                            {% trans "Title and Body" %}</label>
+                       </li>
+                    </ul>
+                </div>
+            </div>
+            <input type="hidden" name="sort" value="{{ nodes.paginator.current_sort }}" />
+            <input type="hidden" id="state-filter-type-hidden" name="state_filter_type" value="" />
+            <div style="display: none;" id="author-filter-container">
+                {% for u in authors %}
+                <input name="authors" type="hidden" value="{{ u.id }}" />
+                {% endfor %}
+            </div>
+            <div style="display: none;" id="tag-filter-container">
+                {% for t in tags %}
+                <input name="tags" type="hidden" value="{{ t.id }}" />
+                {% endfor %}
+            </div>
+            <div id="type-filter-container" style="display: none;">
+                {% for type in type_filter %}
+                <input name="node_type" type="hidden" value="{{ type }}" />
+                {% endfor %}
+            </div>
+            <div id="state-filter-container" style="display: none;">
+                {% for type in state_filter %}
+                <input name="state_type" type="hidden" value="{{ type }}" />
+                {% endfor %}
+            </div>
+            </form>
+        </div>
+        <div id="changelist-filter">
+            <h2 id="filter-panel-header">{% trans "Filter" %}<small> ({% trans "Click to show/hide" %})</small></h2>
+            <div id="filter-panel">
+            <h3>{% trans "By type" %}</h3>
+            <ul>
+                <li {% if not type_filter %} class="selected"{% endif %}>
+                    <a id="all-node-type-link" href="#all" title="{% trans "click to clear the type filter" %}">{% trans "all" %}</a>
+                </li>
+                {% for type, name in node_types %}
+                <li{% if type|contained_in:type_filter %} class="selected" title="{% trans "click to remove from the filter" %}"{% else %} title="{% trans "click to add to the filter" %}"{% endif %}>
+                    <a class="node-type-link" href="#{{ type }}">{{ name }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+            <h3>{% trans "By state" %}</h3>
+            <ul>
+                <li {% if not state_filter %} class="selected"{% endif %}>
+                    <a id="all-state-link" href="#any" title="{% trans "click to clear the state filter" %}">{% trans "any" %}</a>
+                </li>
+                {% for state_type in state_types %}
+                    <li{% if state_type|contained_in:state_filter %} class="selected" title="{% trans "click to remove from the filter" %}"{% else %} title="{% trans "click to add to the filter" %}"{% endif %}>
+                        <a class="state-type-link" href="#{{ state_type }}">{{ state_type }}</a>
+                    </li>
+                {% endfor %}
+                <li>
+                    <select id="state-filter-type">
+                        <option value="any"{% ifequal state_filter_type "any" %} selected="selected"{% endifequal %}>{% trans "Match any selected" %}</option>
+                        <option value="all"{% ifequal state_filter_type "all" %} selected="selected"{% endifequal %}>{% trans "Match all selected" %}</option>
+                    </select>
+                </li>
+            </ul>
+            <h3>{% trans "By author(s)" %}</h3>
+            {% if not authors.count %}
+                <small>{% trans "No users selected, use the box bellow to add users to the filter." %}</small>
+            {% else %}
+                <ul>
+                    {% for u in authors %}
+                        <li class="selected">
+                            <img class="author-filter-remover" rel="{{ u.id }}" src="{% media "/media/images/close-small-dark.png" %}">
+                            {{ u.decorated_name }} ({{ u.reputation }})
+                        </li>
+                    {% endfor %}
+                </ul>
+                <small>{% trans "Click on the cross next to a user name to remove it from the filter." %}</small>
+            {% endif %}
+            <input type="text" size="20" autocomplete="off" id="author-selector" />
+
+            <h3>{% trans "By tag(s)" %}</h3>
+            {% if not tags.count %}
+                <small>{% trans "No tags selected, use the box bellow to add tags to the filter." %}</small>
+            {% else %}
+                <ul>
+                    {% for t in tags %}
+                        <li class="selected">
+                            <img class="tag-filter-remover" rel="{{ t.id }}" src="{% media "/media/images/close-small-dark.png" %}">
+                            {{ t.name }} ({{ t.used_count }})
+                        </li>
+                    {% endfor %}
+                </ul>
+                <small>{% trans "Click on the cross next to a tag name to remove it from the filter." %}</small>
+            {% endif %}
+            <input type="text" size="20" autocomplete="off" id="tag-selector" />
+
+            <h3>{% trans "Pre defined" %}</h3>
+            {% if not settings.NODE_MAN_FILTERS %}
+                <small>{% trans "There are no saved filters. Click bellow to add." %}</small>
+            {% endif %}
+            <ul id="pre-filter-container">
+                {% for name, uri in settings.NODE_MAN_FILTERS %}
+                <li class="selected"><a href="{% url admin_tools "nodeman" %}?{{ uri }}">{{ name }}</a></li>
+                {% endfor %}
+            </ul>
+            <form action="" method="POST">
+                <input name="filter_name" type="text" size="20" id="filter-name-box" style="color: #AAA;" value="{% trans "Filter name..." %}" />
+                <button name="save_filter" value="0" style="color: #AAA;" title="{% trans "Click to save the current filter" %}" id="save-filter-button" disabled="disabled" class="button">{% trans "Save" %}</button>
+            </form>
+
+            {% comment %}<h3>{% trans "Show" %}</h3>
+            <form action="" method="get">
+                <div>{{ show_form.show }}</div>
+                <input type="submit" value="{% trans "Refresh" %}" />
+            </form>{% endcomment %}
+            </div>
+        </div>
+        <form id="changelist-form" method="POST" action="">
+            <div class="actions">
+                <label>
+                    {% trans "Action" %}:
+                    <select name="action">
+                        <option selected="selected" value="">---------</option>
+                        <option value="delete_selected">{% trans "Mark deleted" %}</option>
+                        <option value="undelete_selected">{% trans "Undelete" %}</option>
+                        <option value="hard_delete_selected">{% trans "Delete completely" %}</option>
+                        <option value="close_selected">{% trans "Close (questions only)" %}</option>
+                    </select>
+                </label>
+                <button value="0" name="execute" title="{% trans "Run the selected action" %}" class="button" type="submit">{% trans "Go" %}</button>
+            </div>
+            <table id="result_list" cellspacing="0">
+                <thead>
+                    <tr>
+                        {% declare %}
+                            current_sort = nodes.paginator.current_sort
+                            added_at = current_sort == "added_at" and "ascending" or (current_sort == "added_at_asc" and "descending" or "")
+                            author = current_sort == "author" and "ascending" or (current_sort == "author_asc" and "descending" or "")
+                            score = current_sort == "score" and "ascending" or (current_sort == "score_asc" and "descending" or "")
+                            act_at = current_sort == "act_at" and "ascending" or (current_sort == "act_at_asc" and "descending" or "")
+                            act_by = current_sort == "act_by" and "ascending" or (current_sort == "act_by_asc" and "descending" or "")
+
+                            added_at_link = current_sort == "added_at" and nodes.paginator.added_at_asc_sort_link or nodes.paginator.added_at_sort_link
+                            author_link = current_sort == "author_asc" and nodes.paginator.author_sort_link or nodes.paginator.author_asc_sort_link
+                            score_link = current_sort == "score" and nodes.paginator.score_asc_sort_link or nodes.paginator.score_sort_link
+                            act_at_link = current_sort == "act_at" and nodes.paginator.act_at_asc_sort_link or nodes.paginator.act_at_sort_link
+                            act_by_link = current_sort == "act_by_asc" and nodes.paginator.act_by_sort_link or nodes.paginator.act_by_asc_sort_link
+                        {% enddeclare %}
+                        {% spaceless %}
+                        <th class="action-checkbox-column">
+                            <input type="checkbox" id="action-toggle" style="display: inline;" />
+                        </th>                        
+                        <th>{% trans "Type" %}</th>
+                        <th>{% trans "Summary" %}</th>
+                        <th class="col-resizer"></th>
+                        <th>{% trans "State" %}</th>
+                        <th class="sorted {{ author }}">
+                            <a href="{{ author_link }}">{% trans "Author" %}</a>
+                        </th>
+                        <th class="sorted {{ added_at }}">
+                            <a href="{{ added_at_link }}">{% trans "Added at" %}</a>
+                        </th>
+                        <!--<th class="sorted {{ score }}">
+                            <a href="{{ score_link }}">{% trans "Score" %}</a>
+                        </th>-->
+                        <th class="sorted {{ act_by }}">
+                            <a href="{{ act_by_link }}">{% trans "Last activity by" %}</a>
+                        </th>
+                        <th class="sorted {{ act_at }}">
+                            <a href="{{ act_at_link }}">{% trans "Last activity at" %}</a>
+                        </th>
+                        <th>{% trans "Tags" %}</th>
+                        {% endspaceless %}
+                    </tr>
+                </thead>
+                <tbody>
+                {% with filter_form.state_type.data as state_type %}
+                {% for node in nodes.paginator.page %}
+                    <tr class="{% cycle 'row1' 'row2' %}">
+                        <td><input type="checkbox" name="_selected_node" value="{{ node.id }}" class="action-select"></td>
+                        <td>{{ node.friendly_name }}</td>
+                        {% declare %}
+                            is_root = node.abs_parent == None
+                            title = is_root and node.title or node.abs_parent.title
+
+                            anchor = "<strong>%s</strong>" % html.hyperlink(node.get_absolute_url(), title)
+                            anchor = ((not is_root) and node.abs_parent.nis.deleted) and "<span class=\"question-deleted\">%s</span>" % anchor or anchor
+                            anchor = is_root and anchor or "(%s)" % anchor
+                            anchor = html.mark_safe(anchor)
+
+                            td_class = ""
+                            td_class = node.nis.accepted and "accepted" or td_class
+                            td_class = node.nis.deleted and "deleted" or td_class
+                        {% enddeclare %}
+                        <td class="{{ td_class }}" colspan="2">
+                            {{ anchor }}<br />
+                            {{ node.summary }}
+                        </td>
+                        <td>
+                            {% for state in node.states.all %}
+                            <b>{{ state.state_type }}</b> {% diff_date state.action.at %} {% trans "by" %}
+                            <a target="_blank" href="{{ state.action.by.get_absolute_url }}">{{ state.action.by.decorated_name }}</a><br />
+                            {% endfor %}
+                        </td>
+                        <td><a href="{{ node.author.get_absolute_url  }}">{{ node.author.decorated_name }}</a></td>
+                        <td>{% diff_date node.added_at %}</td>
+                        <!--<td>{{ node.score }}</td>-->
+                        <td><a href="{{ node.last_activity_by.get_absolute_url  }}">{{ node.last_activity_by.decorated_name }}</a></td>
+                        <td>{% diff_date node.last_activity_at %}</td>
+                        <td>
+                            {% for t in node.tags.all %}
+                                {% if t|contained_in:tags %}<b>{{ t.name }}</b>
+                                {% else %}{{ t.name }}{% endif %}
+                            {% endfor %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                {% endwith %}
+                </tbody>
+            </table>
+            {{ nodes.paginator.page_numbers }}
+        </form>
+    </div>
+{% endblock %}

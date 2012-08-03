@@ -1,0 +1,36 @@
+{% extends "base_content.html" %}
+{% load i18n %}
+{% block title %}{% trans "Akismet message" %}{% endblock %}
+
+{% block content %}
+<div class="headNormal">
+{% blocktrans %}Akismet believes your {{ action_name }} is spam.{% endblocktrans %}
+</div>
+<div class="content">
+{% blocktrans %}
+We're sorry, but Akismet believes your {{ action_name }} is spam.<br />
+If you believe this is an error, please contact the forum administrator.
+{% endblocktrans %}
+
+{% if captcha_form.recaptcha %}
+<form action="." method="post">
+<table>
+	<tr>
+		<td>
+		{% for post_item in post_data.items %}
+		<input type="hidden" name="{{ post_item.0 }}" value="{{ post_item.1 }}" />
+		{% endfor %}
+
+		{{ captcha_form.recaptcha }}
+		
+		</td>
+	</tr>
+	<tr>
+		<td><input type="submit" value"{% trans "Submit" %} /></td>
+	</tr>
+</table>
+</form>
+{% endif %}
+
+</div>
+{% endblock %}

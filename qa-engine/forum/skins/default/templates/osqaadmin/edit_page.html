@@ -1,0 +1,36 @@
+{% extends basetemplate %}
+
+{% load i18n extra_filters %}
+
+{% block subtitle %}{% trans "Editing page" %}{% endblock %}
+{% block pagename %}
+    <a href="{% url admin_static_pages %}">{% trans "Static Pages" %}</a> &gt;
+    {% if page %}{% trans "Editing page" %}{% else %}{% trans "Creating page" %}{% endif %}
+{% endblock %}
+{% block description %}
+    {% if page %}{{ page.title }}{% else %}{% trans "New page" %}{% endif %}
+    ({% if published %}{% trans "Published" %}{% else %}{% trans "Unpublished" %}{% endif %})    
+{% endblock %}
+
+{% block admincontent %}
+    <form action="" method="post" accept-charset="utf-8">
+        <table style="width: 100%">
+        {{ form.as_table }}
+        <tr>
+            <th></th>
+            <td>
+                {% if page %}
+                    <input id="submit" name="submit" type="submit" value="{% trans "Edit" %}" />
+                {% else %}
+                    <input id="submit" name="submit" type="submit" value="{% trans "Save" %}" />
+                {% endif %}
+                {% if published %}
+                    <input id="unpublish" name="unpublish" type="submit" value="{% trans "Unpublish" %}" />
+                {% else %}
+                    <input id="publish" name="publish" type="submit" value="{% trans "Publish" %}" />
+                {% endif %}
+            </td>
+        </tr>
+        </table>
+    </form>
+{% endblock %}

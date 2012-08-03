@@ -1,0 +1,78 @@
+{% extends "base_content.html" %}
+{% load node_tags %}
+{% load extra_tags %}
+{% load i18n %}
+{% load extra_filters %}
+{% load humanize %}
+{% block title %}{% spaceless %}{% trans "Revision history" %}{% endspaceless %}{% endblock %}
+{% block forejs %}
+    <script type="text/javascript">
+
+        $(document).ready(function() {
+            rev_bodies = $('div.rev-body');
+            if(rev_bodies.length > 0)toggleRev(rev_bodies.length);
+            if(rev_bodies.length > 1)toggleRev(rev_bodies.length-1);
+
+            for(var index = 0; index < rev_bodies.length; index++) {
+                rev_bodies.get(index);
+            }
+        });
+
+        function toggleRev(id) {
+            var rev_body = $('div#rev-body-' + id).get(0);
+            var rev_arrow = $('img#rev-arrow-' + id).get(0);
+            if (rev_body.style.display == "none") {
+                rev_body.style.display = "";
+                rev_arrow.src="{% media  "/media/images/expander-arrow-hide.gif" %}"
+            } else {
+                rev_body.style.display = "none";
+                rev_arrow.src="{% media  "/media/images/expander-arrow-show.gif" %}"
+            }
+        }
+        
+    </script>
+{% endblock %}
+        
+{% block content %}
+<div id="main-bar" class="headNormal">
+    {% trans "Revision history" %}[<a href="{{ post.get_absolute_url }}">{% trans "back" %}</a>]
+</div>
+<div id="main-body" class="">
+    <div id="revisions">
+    {% for revision in revisions %}
+      <div class="revision">
+        <div id="rev-header-{{ revision.inst.revision }}" class="header {% ifequal post.author revision.inst.author %}author{% endifequal %}">
+          <div class="header-controls">
+            <table width="100%">
+                <tr>
+                    <td width="20" style="vertical-align:middle"><img id="rev-arrow-{{ revision.inst.revision }}"
+                                                                      class="rev-arrow"
+                                                                      onclick="toggleRev({{ revision.inst.revision }})"
+                                                                      src="{% media  "/media/images/expander-arrow-show.gif" %}"
+                                                                      alt="{% trans "click to hide/show revision" %}"/>
+                    </td>
+                    <td width="30px" style="vertical-align:middle"><span class="revision-number" title="{% trans "revision" %} {{ revision.inst.revision }}">{{ revision.inst.revision }}</span></td>
+                    <td width="200px" style="vertical-align:middle">
+                        <div class="summary"><span>{{ revision.inst.summary }}</span></div>
+                    </td>
+                    <td align="right">
+                        <div class="revision-mark" >
+                            {% reviser_info revision.inst %}
+                        </div>
+                    </td>
+                </tr>
+    	            
+            </table>
+          </div>
+        </div>
+        <div id="rev-body-{{ revision.inst.revision }}" class="diff body rev-body" style="display:none">
+            {{ revision.diff|safe }}
+        </div>
+      </div>
+    {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block endjs %}
+{% endblock %}

@@ -1,0 +1,22 @@
+{% load i18n %}
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <title>{% trans "System down for maintenance" %}</title>
+        <style>
+            #content {
+                margin: auto;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="content">
+            <img src="{{ app_logo }}">
+            <p>{{ app_title }}</p>
+            <h3>{% trans "System down for maintenance" %}</h3>
+            <br/>
+            {{ message }}
+        </div>
+    </body>
+</html>

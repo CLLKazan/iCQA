@@ -1,0 +1,46 @@
+{% extends "base_content.html" %}
+{% load i18n %}
+{% block title %}{% trans "Not logged in" %}{% endblock %}
+{% block meta %}
+    <!-- <meta http-equiv="refresh" content="5;url={% url auth_signin %}"> -->
+{% endblock %}
+{% block forestyle%}
+    <style type="text/css">
+ 		form input { margin-right: 5px; }
+	</style>
+{% endblock %}
+{% block forejs %}
+       <script type="text/javascript">
+        $().ready(function(){
+            window.setInterval(function() {
+                $('#redirect_loader').html($('#redirect_loader').html() + '.')
+            }, 800);
+
+            window.setTimeout(function() {
+                window.location = "{% url auth_signin %}";
+            }, 5000);
+        });
+
+        </script>
+{% endblock %}
+{% block content %}
+<div id="main-bar" class="headNormal">
+    {% trans "Not logged in" %}
+</div>
+<div id="main-body" class="">
+    <div style="padding:5px 0px 10px 0;line-height:25px;">
+        <h3>{% trans "You are not logged in..." %}</h3>
+        <div style="margin-top:5px">
+            {% trans "...and the resource you're trying to access is protected." %}
+            <p>
+                {% trans "Redirecting to the login page." %}<span id="redirect_loader"></span>
+            </p>
+            <p>
+                {% trans "If you're not automatically redirected in 5 seconds, please click" %}
+                <a href="{% url auth_signin %}">{% trans "here" %}</a>.
+            </p>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

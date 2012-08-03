@@ -1,0 +1,14 @@
+{% load i18n %}
+
+{% trans "Please select a reason bellow or use the text box to input your own reason." %}
+<select class="prompt-examples">
+    {% for type in types %}
+        <option value="{{ type }}">{{ type }}</option>
+    {% endfor %}
+</select>
+<textarea name="prompt">{{ types|first }}</textarea>
+<script>
+$('.prompt-examples').change(function() {
+    $('textarea[name=prompt]').val($(this).val())            
+})
+</script>

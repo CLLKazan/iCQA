@@ -1,0 +1,19 @@
+{% load i18n %}
+
+{% spaceless %}
+<table>
+    <tr>
+        <td><label for="permanent_link_url">{% trans "Permanent link" %}:</label></td>
+        <td><input id="permanent_link_url" readonly="readonly" type="text" value="{{ url }}" /></td>
+    </tr>
+</table>
+{% endspaceless %}
+
+<script type="text/javascript">
+$(document).ready(function() {
+    // We highlight the content of the text field on click event
+    $('#permanent_link_url').click(function() {
+        $(this).select();
+    })
+})
+</script>

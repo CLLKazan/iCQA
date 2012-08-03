@@ -1,0 +1,86 @@
+{% load extra_tags %}
+{% load i18n %}
+
+<div class="comments-container" id="comments-container-{{ post.id }}">
+    {% for comment in comments %}
+        <a name="{{ comment.id }}"></a>
+        <div class="comment{% if not comment.top_scorer %} not_top_scorer{% endif %}" id="comment-{{comment.id}}">
+            <div id="post-{{ comment.id }}-score" class="comment-score">{% if comment.score %}{{ comment.score }}{% endif %}</div>
+            <div class="comment-text">{{ comment.comment }}</div>
+            <div class="comment-info" id="comment-{{comment.id}}-info">
+                {% if comment.can_like %}
+                    <a id="post-{{ comment.id }}-upvote" href="{% url like_comment id=comment.id %}"
+                     title="{% trans "I like this comment (click again to cancel)" %}" class="ajax-command comment-like{% if comment.likes %} on{% endif %}"
+                    rel="nofollow"> </a>
+                {% endif %}
+                {% if comment.can_edit %}
+                    <a id="comment-{{ comment.id }}-edit" href="{% url node_markdown id=comment.id %}" title="{% trans "Edit comment" %}"
+                        class="comment-edit" rel="nofollow"> </a>
+                {% endif %}
+                {% if comment.can_delete %}
+                    <a id="comment-{{ comment.id }}-delete" href="{% url delete_comment id=comment.id %}" title="{% trans "Delete comment" %}"
+                        class="ajax-command comment-delete" rel="nofollow"> </a>
+                {% endif %}
+                {% if comment.can_convert %}
+                    <a rel="nofollow" id="comment-{{ comment.id }}-convert" href="{% url convert_comment id=comment.id %}" title="{% trans "Convert comment to answer" %}"
+                        class="ajax-command comment-convert confirm" rel="nofollow"> </a>
+                {% endif %}
+                    
+
+                <span class="comment-age">({% diff_date comment.added_at %})</span>
+                <a class="comment-user userinfo" href="{{comment.user.get_profile_url}}">{{comment.user.decorated_name}}</a>
+                {% if show_gravatar %}{% gravatar comment.user 18 %}{% endif %}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+<div id="comment-tools-{{ post.id }}" class="comment-tools">
+    {% ifnotequal showing total %}
+        <span class="comments-showing">
+            {% blocktrans %}showing {{ showing }} of {{ total }}{% endblocktrans %}
+        </span>
+        <a href="#" class="show-all-comments-link">{% trans "show all" %}</a>
+    {% endifnotequal %}
+    {% if can_comment %}
+        <a href="#" class="add-comment-link">{% trans "add new comment" %}</a>
+    {% endif %}
+</div>
+<div id="comment-{{ post.id }}-form-container" class="comment-form-container">
+    {% if can_comment %}
+    <form id="comment-{{ post.id }}-form" method="post" action="{% url comment id=post.id %}" accept-charset="utf-8">
+        <div class="comment-form-widgets-container">
+            <textarea name="comment" class="commentBox"></textarea>
+            <div class="comment-form-buttons">
+                <span id="comment-{{ post.id }}-chars-left" class="comment-chars-left">
+                    <span class="comments-char-left-count">{{ min_length }}|{{ max_length }}</span>
+                    <span class="comments-chars-togo-msg">{% trans "characters needed" %}</span>
+                    <span class="comments-chars-left-msg">{% trans "characters left" %}</span>
+                </span>
+                <input type="submit" class="comment-submit" value="{% trans " comment" %}" />
+                <input type="submit" class="comment-cancel" value="{% trans " cancel" %}" />
+            </div>
+        </div>
+        <script type="text/html" class="new-comment-skeleton" id="new-comment-skeleton-{{ post.id }}">
+            <div class="comment{% if not comment.top_scorer %} not_top_scorer{% endif %}" id="comment-%ID%">
+                <div id="post-%ID%-score" class="comment-score"></div>
+                <div class="comment-text">%COMMENT%</div>
+                <div class="comment-info" id="comment-%ID%-info">
+                    <a id="comment-%ID%-edit" href="%EDIT_URL%"
+                        class="comment-edit" rel="nofollow"> </a>
+                    <a id="comment-%ID%-delete" href="%DELETE_URL%"
+                        class="ajax-command comment-delete" rel="nofollow"> </a>
+                    <a rel="nofollow" id="comment-%ID%-convert" href="%CONVERT_URL%" title="{% trans "Convert comment to answer" %}"
+                        class="ajax-command comment-convert confirm" rel="nofollow"> </a>
+
+                    <span class="comment-age">({% trans "just now" %})</span>
+                    <a class="comment-user" href="%PROFILE_URL%">%USERNAME%</a>
+                    {% if user.is_authenticated %}
+                        {% if show_gravatar %}{% gravatar user 18 %}{% endif %}
+                    {% endif %}
+                </div>
+             </div>
+        </script>
+    </form>
+    {% endif %}
+</div>
+    

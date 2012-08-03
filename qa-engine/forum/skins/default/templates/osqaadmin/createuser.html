@@ -1,0 +1,20 @@
+{% extends basetemplate %}
+
+{% load i18n %}
+{% load user_tags %}
+
+{% block subtitle %}
+    {% trans "Create User" %}
+{% endblock %}
+{% block description %}
+    {% trans "Quick creation of a new user" %}
+{% endblock %}
+
+{% block admincontent %}
+    <form action="" method="POST">
+        <table>
+            {{ form.as_table }}
+            <tr><th></th><td><input type="submit" value="{% trans "Save" %}"></td></tr>
+        </table>
+    </form>
+{% endblock %}

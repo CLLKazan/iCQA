@@ -1,0 +1,13 @@
+{% spaceless %}
+{% load i18n %}
+<div class="paginator">
+    <span class="text">{% trans "posts per page" %}</span>
+    {% for size, url in sizes %}
+        {% ifequal size current %}
+            <span class="curr">{{ size }}</span>
+        {% else %}
+            <span class="page"><a href="{{ url }}">{{ size }}</a></span>
+        {% endifequal %}
+    {% endfor %}
+</div>
+{% endspaceless %}
