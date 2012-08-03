@@ -359,6 +359,9 @@ def postimport(dump, uidmap,tagmap):
         if sxpost.get('lastactivityuserid', None):
             post.last_activity_by_id = uidmap[sxpost['lastactivityuserid']]
             post.last_activity_at = readTime(sxpost['lastactivitydate'])
+        else:
+            post.last_activity_by_id = post.author_id
+            post.last_activity_at = post.added_at
 
         if sxpost.get('posttypeid') == '1': #question
             post.node_type = "question"

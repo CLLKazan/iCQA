@@ -2,7 +2,7 @@ import os.path
 from base import Setting, SettingSet
 from django.utils.translation import ugettext_lazy as _
 
-FORUM_SET = SettingSet('form', _('Form settings'), _("General settings for the OSQA forms."), 10)
+FORUM_SET = SettingSet('form', _('Form settings'), _("General settings for the iCQA forms."), 10)
 
 WIKI_ON = Setting('WIKI_ON', True, FORUM_SET, dict(
 label = _("Enable community wiki"),
