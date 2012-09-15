@@ -87,7 +87,7 @@ ComputeFreshness <- function(q, time.words.re){
   #   time.words.re: regular expression containing trigger words
   
   if( length(grep(time.words.re, c(q$title,q$body), ignore.case=T)) > 0 ){
-    return(1/as.integer(Sys.Date() - as.Date(q$added_at)))
+    return(1/as.integer(as.Date("2012-07-30") - as.Date(q$added_at)))
   }else{
     return(1)
   }
