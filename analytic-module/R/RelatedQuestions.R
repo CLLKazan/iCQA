@@ -10,6 +10,7 @@
 library("RMySQL")
 library("R.utils")
 library("topicmodels")
+library("plyr")
 
 is.parallel <- require(doMC)
 if(is.parallel){
