@@ -1,0 +1,244 @@
+"id" "title" "body" "added_at" "score"
+"1" 1 "How do JavaScript closures work?" "Like the old Albert said: \"If you can't explain it to a six-year old, you really don't understand it yourself.”. Well, I tried to explain JavaScript closures to a 27-year old friend and completely failed.
+
+How would you explain it to a 6-year old person that is strangely interested in that subject?
+
+EDIT: I have seen the Scheme example given in Stack Overflow, and it did not help." "2010-06-26 13:34:56" 0.032258064516129
+"2" 2 "Javascript Closures Explanation" "Question: There seem to be many benefits to Closures, but what are the negatives? Additionally, is my understanding of Closures correct? Finally, once closures are created, can they be destroyed?
+
+I've been reading a little bit about Javascript Closures yesterday. I hope someone a little more knowledgeable will guide my assertions, correcting me where wrong.
+
+Benefits of Closures:
+
+Encapsulate the variables to a local scope, by using an internal function. The anonymity of the function is insignificant.
+What I've found helpful is to do some basic testing, regarding local/global scope:
+
+<script type=\"text/javascript\">
+
+   var global_text  = \"\";
+   var global_count = 0;
+   var global_num1  = 10;
+   var global_num2  = 20;
+   var global_num3  = 30;
+
+   function outerFunc() {
+
+      var local_count = local_count || 0;
+
+      alert(\"global_num1: \" + global_num1);    // global_num1: undefined
+      var global_num1  = global_num1 || 0;
+      alert(\"global_num1: \" + global_num1);    // global_num1: 0
+
+      alert(\"global_num2: \" + global_num2);    // global_num2: 20
+      global_num2  = global_num2 || 0;         // (notice) no definition with 'var'
+      alert(\"global_num2: \" + global_num2);    // global_num2: 20
+      global_num2  = 0;
+
+      alert(\"local_count: \" + local_count);    // local_count: 0
+
+      function output() {
+         global_num3++;
+
+         alert(\"local_count:  \" + local_count  + \"\n\" +
+               \"global_count: \" + global_count + \"\n\" +
+               \"global_text:  \" + global_text
+              );
+
+         local_count++; 
+      }
+
+      local_count++;
+      global_count++;
+
+      return output;  
+   }  
+
+   var myFunc = outerFunc();
+
+   myFunc();
+      /* Outputs:
+       **********************
+       * local_count:  1
+       * global_count: 1
+       * global_text: 
+       **********************/
+
+   global_text = \"global\";
+   myFunc();
+      /* Outputs:
+       **********************
+       * local_count:  2
+       * global_count: 1
+       * global_text:  global
+       **********************/
+
+   var local_count = 100;
+   myFunc();
+      /* Outputs:
+       **********************
+       * local_count:  3
+       * global_count: 1
+       * global_text:  global
+       **********************/
+
+
+   alert(\"global_num1: \" + global_num1);      // global_num1: 10
+   alert(\"global_num2: \" + global_num2);      // global_num2: 0
+   alert(\"global_num3: \" + global_num3);      // global_num3: 33
+
+</script>
+Interesting things I took out of it:
+
+The alerts in outerFunc are only called once, which is when the outerFunc call is assigned to myFunc (myFunc = outerFunc()). This assignment seems to keep the outerFunc open, in what I would like to call a persistent state.
+
+Everytime myFunc is called, the return is executed. In this case, the return is the internal function.
+
+Something really interesting is the localization that occurs when defining local variables. Notice the difference in the first alert between global_num1 and global_num2, even before the variable is trying to be created, global_num1 is considered undefined because the 'var' was used to signify a local variable to that function. -- This has been talked about before, in the order of operation for the Javascript engine, it's just nice to see this put to work.
+
+Globals can still be used, but local variables will override them. Notice before the third myFunc call, a global variable called local_count is created, but it as no effect on the internal function, which has a variable that goes by the same name. Conversely, each function call has the ability to modify global variables, as noticed by global_var3.
+
+Post Thoughts: Even though the code is straightforward, it is cluttered by alerts for you guys, so you can plug and play.
+
+I know there are other examples of closures, many of which use anonymous functions in combination with looping structures, but I think this is good for a 101-starter course to see the effects.
+
+The one thing I'm concerned with is the negative impact closures will have on memory. Because it keeps the function environment open, it is also keeping those variables stored in memory, which may/may not have performance implications, especially regarding DOM traversals and garbage collection. I'm also not sure what kind of role this will play in terms of memory leakage and I'm not sure if the closure can be removed from memory by a simple \"delete myFunc;.\"
+
+Hope this helps someone,
+
+vol7ron" "2010-06-28 14:26:36" 0
+"3" 3 "What is the following variation on Set Cover known as?" "What is the following variation on set cover known as?
+
+Given a set S, a collection C of subsets of S and a positive integer K, do there exist K sets in C such that every pair of elements of S lies in one of the selected subsets.
+
+Note: It is not hard to see that this problem is NP-Complete:  Given a normal set cover problem (S, C, K), make three copies of S, say S', S'', and S''',  then create your subsets as S''', |S| subsets of the form {a'} U {x in S'' | x != a} U {a'''}, |S| subsets of the form {a''} U {x in S' | x != a} U {a'''}, {a', a'' | a in C_i}.  Then we can solve the set cover problem with K subsets iff we can solve the pair cover problem with K + 1 + 2 |S| subsets.
+
+This generalizes to triples, etc.  I would like to be able to not waste half a page proving this, and it is probably not obvious enough to dismiss as trivial.  It is certainly sufficiently useful that someone has proved it, but I have no idea who or where. Today
+
+Also, is there a good place to look for NP-Completeness results that are not in Garey and Johnson?
+" "2010-06-29 09:05:40" 0
+"4" 4 "How can I work around the Javascript closures?" "Consider this small snippet of JavaScript:
+
+for(var i in map.maps)
+{
+    buttons.push($(\"\").html(i).click(function() { alert(i); }));
+}
+It creates one button for each of the fields in the map.maps object (It's an assoc array). I set the index as the button's text and set it to alert the index as well. Obviously one would expect all the buttons to alert it's own text when clicked, but instead all the buttons alert the text of the final index in the map.maps object when clicked.
+
+I assume this behavior is caused by the neat way JavaScript handles closures, going back and executing functions from the closures in which they were created.
+
+The only way I can imagine getting around this is setting the index as data on the button object and using it from the click callback. I could also mimic the map.maps indices in my buttons object and find the correct index on click using indexOf, but I prefer the former method.
+
+What I'm looking for in answers is confirmation that I'm doing it the right way, or a suggestion as to how I should do it." "2010-07-02 16:58:12" 0.0476190476190476
+"5" 5 "Combine javascript closures together" "I have a \"host\" javascript closure, in which i keep all the common variables i am using over the website
+
+var hostFunction = (function () {
+    var variableA = $(\"#variableA\");
+var variableB = $(\"#variableB\");
+
+// some usefull code here
+} ());
+In my website, in another javascript file, i have another closure
+
+var childFunction = (function () {
+    var changeValue = function () {
+        variableA.html(\"I was changed\");
+    };
+    
+    // other usefull code
+} ());
+How is possible to insert \"childFunction\" inside \"hostFunction\" so i can get access to those variables?
+
+What is the best practice of sharing variables across the website but also keeping them inside a scope so they don't conflict with other javascript variables?" "2010-07-04 19:42:33" 0
+"6" 6 "Hierarchies in NP (under the assumption that P != NP)" "Assuming that P != NP, I believe it has been shown that there are problems which are not in P and not NP-Complete. Graph Isomorphism is conjectured to be such a problem.
+
+Is there any evidence of more such 'layers' in NP? i.e. A hierachy of more than three classes starting at P and culminating in NP, such that each is a proper superset of the other? 
+
+Is it possible that the hierarchy is infinite?
+" "2010-07-22 21:49:05" 0
+"7" 7 "Simple balanced trees with O(1) concat?" "In Purely Functional Worst Case Constant Time Catenable Sorted Lists, Brodal et al. present purely functional balanced trees with O(1) concatenate and O(lg n) insert, delete, and find. The data structure is somewhat complicated.
+
+Is there a simpler balanced search tree with O(1) concatenate, functional or not?
+" "2010-07-22 22:41:25" 0
+"8" 8 "What are the advantages of a red/black tree?" "Question is self-explanatory.
+" "2010-07-23 01:06:55" 0
+"9" 9 "Minimum spanning tree algorithm." "Is the following a valid algorithm for finding a minimum spanning tree?
+
+
+  Given a weighted graph with unique weights, remove the all edges that are the highest cost edge in any cycle of the original full graph.
+
+
+Edit: I've changed the description to draw more attention to the differences between this an Kruskal's algorithm (which it is NOT.) Kruskal's algorithm is iterative, this is just a predicate that can be tested on the original unmodified graph.
+" "2010-07-23 15:50:30" 0
+"10" 10 "What specific evidence is there for P = RP?" "RP is the class of problems decidable by a nondeterministic Turing machine that terminates in polynomial time, but that is also allowed one-sided error.  P is the usual class of problems decidable by a deterministic Turing machine that terminates in polynomial time.
+
+P = RP follows from a relationship in circuit complexity.  Impagliazzo and Wigderson showed that P = BPP follows if some problem that can be decided in deterministic exponential time also requires exponential size circuits (note that P = BPP implies P = RP).  Perhaps due to these results, there seems to be a feeling among some complexity theorists that probabilistic reductions can probably be derandomized.
+
+
+  What other specific evidence is there that P = RP?
+
+" "2010-07-23 17:33:32" 0.0394736842105263
+"11" 11 "H-free cut problem" "Suppose you are given a connected, simple, undirected graph H.
+
+The H-free cut problem is defined as follows:
+
+
+  Given a simple, undirected graph G, is
+  there a cut (partition of vertices
+  into two non-empty sets, L,R) such
+  that graphs induced by the cut-sets (L
+  and R) both do not contain a subgraph
+  isomorphic to H.
+
+
+For example, when H is the graph with two vertices connected by a single edge, the problem is the same as determining if a graph is bipartite and is in P.
+
+In case H is a triangle, this is like the vertex version of the Monochromatic Triangle problem.
+
+I think I have been able to show that when H is 2-connected with at least three vertices, the H-free cut problem is NP-Complete. 
+
+I haven't been able to find any references to this problem (and so, any results).
+
+Can we drop the 2-connectedness condition and still prove NP-Completeness?
+
+Does anyone know of any known results which would imply the above or a stronger result (or you think might be relevant)?
+" "2010-07-23 18:03:37" 0
+"12" 12 "What are the historical roots of Milner's bigraphs?" "Robin Milner defined bigraphs as a type of graphical structure with graph-like structure but where the nodes can be nested.  They generalise process calculi like CCS and the $\pi$-calculus, but Milner seems to have intended for them to be used much more generally: the seminar notes from shortly before his death detail recent developments.
+
+Looking back instead of forward, the prologue of Milner's 2009 textbook The Space and Motion of Communicating Agents, does not provide much of a historical background.  Milner explicitly acknowledged its roots in Mobile Ambients and the Pi calculus.  Yet the model is so general that there are bound to be strong links to older models.
+
+
+  Are there historical predecessors of bigraphs?
+
+
+Focusing on the syntactic elements rather than the way they are used to capture evolving systems, an obvious precedent is A. B. Kempe, A Memoir on the Theory of Mathematical Form, Philosophical Transactions of the Royal Society of London 177, 170, 1886.  Kempe's recent paper may have introduced vertex and edge coloured graphs (I am ignorant of earlier usage but would welcome pointers).  Kempe also appears to have had some of the same kinds of general applications in mind that Milner envisaged.  Are there other predecessors that should be mentioned?
+
+(Edit: now marking this a community wiki, in the hope of attracting further answers.)
+" "2009-06-29 01:04:59" 1
+"13" 13 "Can a nondeterministic finite automata (NDFA) be efficiently converted to a deterministic finite automata (DFA) in subexponential space/time?" "Twenty years ago, I built an regular expression package that included conversions from regular expressions to a finite state machine (DFA) and supported a host of closed regular expression  operations (Kleene star, concatenation, reverse, set operations, etc). I was unsure about the worst case performance of my package.
+
+A DFA has the same expressive power as an NDFA, because an n-state NDFA can be trivially converted to a DFA having 2^n states. However, are there any lower upper bound guarantees for such a conversion that do not require an exponential explosion in state?
+
+I was unable to come up with examples mal-behaving regular expressions or NDFAs, but I didn't spend much time thinking about it. I am guessing a regular expression like ((((e|A|B|C)*(e|D|E|F))*(e|G|H|I))*(e|J|K|L|M))* which mixes a lot of alternations and Kleene stars would have a linearly sized NDFA but an expansive DFA. 
+" "2009-06-30 08:01:26" 0
+"14" 14 "Problems Between P and NPC" "Factoring and graph isomorphism are problems in NP that are not known to be in P nor to be NP-Complete.  What are some other (sufficiently different) natural problems that share this property?  Artificial examples coming directly from the proof of Ladner's theorem do not count.
+
+Are any of these example provably NP-intermediate, assuming only some \"reasonable\" hypothesis?
+" "2009-06-30 11:44:17" 0.008
+"15" 15 "Which results in complexity theory make essential use of uniformity?" "A complexity class separation proof uses uniformity of complexity classes essentially if the proof does not prove the result for nonuniform version, for example proofs based on diagonalization (like time and space hierarchy theorems) make essential use of uniformity as they need to simulate the programs in the smaller class. 
+
+
+  Which results in complexity theory (other than diagonalization proofs) use uniformity essentially?
+
+" "2009-07-02 02:47:14" 0
+"16" 16 "Where and how did computers help prove a theorem?" "The purposes of this question is to collect examples from theoretical computer science where the systematic use of computers was helpful
+
+
+in building a conjecture that lead to a theorem,
+falsifying a conjecture or proof approach,
+constructing/verifying (parts of) a proof.
+
+
+If you have a specific example, please describe how it was done. Perhaps this will help others use computers more effectively in their daily research (which still seems to be a fairly uncommon practice in TCS as of today).
+
+(Flagged as community wiki, since there is no single \"correct\" answer.)
+" "2009-07-05 20:06:53" 0.0530973451327434

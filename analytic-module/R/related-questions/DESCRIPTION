@@ -1,0 +1,10 @@
+Package:	related.questions
+Type:		Package
+Depends:	R (>= 2.0.0), plyr, stringr, RMySQL, R.utils, topicmodels, Snowball
+License:	GPL (http://www.gnu.org/copyleft/gpl.html)
+Suggests: 	RUnit
+Version:	0.1
+Description:	None
+Title:		Analytic Module For iCQA
+Author:		CLLKazan
+Maintainer:	CLLKazan <cll.niimm.ksu@gmail.com>

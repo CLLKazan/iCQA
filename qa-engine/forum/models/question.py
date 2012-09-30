@@ -50,10 +50,13 @@ class Question(Node):
         return reverse('question_revisions', args=[self.id])
 
     def get_related_questions(self, count=10):
+        related_list = self.related_questions.all().values('id')[:count]
+        return [Question.objects.get(id=r['id']) for r in related_list]
         cache_key = '%s.related_questions:%d:%d' % (settings.APP_URL, count, self.id)
         related_list = cache.get(cache_key)
 
         if related_list is None:
+            #related_list = self.related_questions.all().values('id')
             related_list = Question.objects.filter_state(deleted=False).values('id').filter(tags__id__in=[t.id for t in self.tags.all()]
             ).exclude(id=self.id).annotate(frequency=models.Count('id')).order_by('-frequency')[:count]
             cache.set(cache_key, related_list, 60 * 60)
