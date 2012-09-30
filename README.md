@@ -10,16 +10,24 @@ iCQA aims to provide the tools for maintaining and analysis of community Q&A ser
 Mailing list
 ------------
 
-Have a question? Ask on our mailing list!
+Have a question? Ask on our [mailing list](https://groups.google.com/d/forum/icqa)!
 
 icqa@googlegroups.com
 
-https://groups.google.com/d/forum/icqa
+Documentation
+----------------------
+
+See our [wiki](https://github.com/CLLKazan/iCQA/wiki).
+
+Development
+----------------------
+
+The project has been developed by the people affiliated with the Computational Linguistics Laboratory at Kazan Federal University (Russia). However, we are open to collaboration. Feel free to join us! 
 
 Continuous Integration
 ----------------------
 
-See our [Jenkins CI server instance](http://cll.niimm.ksu.ru:8080/jenkins/job/iCQA)
+See our [Jenkins CI server instance](http://cll.niimm.ksu.ru:8080/jenkins/job/iCQA).
 
 License
 ---------------------
