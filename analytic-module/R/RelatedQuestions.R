@@ -92,7 +92,7 @@ result <- ddply(questions[! questions$id %in% processed,], c("id"), function(q){
   }else{
     return(NULL)
   }
-}, .progress="text",.parallel=is.parallel)
+}, .progress="text",.parallel=F)
 
 names(result) <- c("question_id","related_question_id","similarity")
 
