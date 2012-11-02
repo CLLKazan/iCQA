@@ -64,7 +64,7 @@ def readTagnames(ts, postid):
 
 def create_and_activate_revision(post):
     revisions.append(u"('%s','',%s,'%s',%s,'Initial revision',1,'%s')" % (
-        post.get('Title', ''), post.get('OwnerUserId', 1), post['Body'],
+        post.get('Title', ''), post.get('OwnerUserId', 1), '',
         post['Id'], readTime(post['CreationDate'])))
     return len(revisions)
 
@@ -76,7 +76,8 @@ def get_state(post):
 def parse(line):
     ret = {}
     for item in re.finditer('(\w+)="([^"]*)"', line):
-        ret.update({item.group(1): unescape(item.group(2)).replace("'", "\\'")})
+        v = unescape(item.group(2))
+        ret.update({item.group(1): re.sub("(?<![\\\])(')","\\'",v)})
     return ret
 
 
