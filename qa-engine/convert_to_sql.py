@@ -6,6 +6,7 @@ import re
 import time
 import codecs
 import HTMLParser
+from lxml import etree
 
 
 now = datetime.now()
@@ -64,7 +65,7 @@ def readTagnames(ts, postid):
 
 def create_and_activate_revision(post):
     revisions.append(u"('%s','',%s,'%s',%s,'Initial revision',1,'%s')" % (
-        post.get('Title', ''), post.get('OwnerUserId', 1), '',
+        mysql_escape(post.get('Title', '')), post.get('OwnerUserId', 1), '',
         post['Id'], readTime(post['CreationDate'])))
     return len(revisions)
 
@@ -77,12 +78,17 @@ def parse(line):
     ret = {}
     for item in re.finditer('(\w+)="([^"]*)"', line):
         v = unescape(item.group(2))
-        ret.update({item.group(1): re.sub("(?<![\\\])(')","\\'",v)})
+        ret.update({item.group(1): re.sub("(?<![\\\])(')", "\\'", v)})
     return ret
+
+
+def mysql_escape(string):
+    return re.sub("(?<![\\\])(')", "\\'", string)
 
 
 def convert(path):
     fname = path.split('/')[-1].lower()
+    context = etree.iterparse(sys.argv[1], events=('end',), tag='row')
     if fname == 'posts.xml':
         header = """INSERT INTO forum_node
             (id, title, tagnames, author_id, body, node_type, parent_id,
@@ -92,9 +98,9 @@ def convert(path):
         def make_sql(obj):
             state = get_state(obj)
             return u"(%s,'%s','%s',%s,'%s','%s',%s,'%s',%s,'%s',%s,'%s',%s,%s,%s)" % (
-                    obj['Id'], obj.get('Title', ''),
-                    readTagnames(obj.get('Tags', ''), obj['Id']),
-                    obj.get('OwnerUserId', '1'), obj['Body'],
+                    obj['Id'], mysql_escape(obj.get('Title', '')),
+                    mysql_escape(readTagnames(obj.get('Tags', ''), obj['Id'])),
+                    obj.get('OwnerUserId', '1'), mysql_escape(obj['Body']),
                     'question' if obj['PostTypeId'] == '1' else 'answer',
                     obj.get('ParentId', 'NULL'), readTime(obj['CreationDate']),
                     obj['Score'], state, obj.get('LastEditorUserId', '1'),
@@ -108,7 +114,7 @@ def convert(path):
                 (id, name, created_by_id, created_at, used_count) VALUES """
             writew(tags_header,
                    tagmap.itervalues(),
-                   lambda x: u"(%s, '%s',%s,'%s',%s)" % (x['id'], x['name'],
+                   lambda x: u"(%s, '%s',%s,'%s',%s)" % (x['id'], mysql_escape(x['name']),
                         x['created_by_id'], x['created_at'], x['used_count']))
             nodetags_header = u"INSERT INTO forum_node_tags(node_id,tag_id) VALUES "
             writew(nodetags_header, nodetags, lambda x: u"(%s,%s)" % x)
@@ -122,10 +128,23 @@ def convert(path):
     elif fname == 'votes.xml':
         pass
 
-    writew(header,
-           codecs.open(path, 'r', 'utf-8').readlines(),
-           lambda x: make_sql(parse(x)),
-           lambda x: 'row' in x)
+    #writew(header,
+    #       codecs.open(path, 'r', 'utf-8').readlines(),
+    #       lambda x: make_sql(parse(x)),
+    #       lambda x: 'row' in x)
+    counter = 0
+    for event, elem in context:
+        if counter % MAX_VALUES == 0:
+            sys.stdout.write(u';\n' + header.encode('utf-8'))
+            values = make_sql(elem.attrib)
+        else:
+            values = u',\n' + make_sql(elem.attrib)
+        sys.stdout.write(values.encode('utf-8'))
+        counter += 1
+        elem.clear()
+        while elem.getprevious() is not None:
+            del elem.getparent()[0]
+    del context
     finalize()
 
 
