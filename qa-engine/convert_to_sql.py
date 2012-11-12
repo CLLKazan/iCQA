@@ -6,16 +6,13 @@ import os.path
 import re
 import time
 from lxml import etree
+from MySQLdb import escape_string
 
 
 now = datetime.now()
 FILES = ('posts.xml', 'users.xml', 'votes.xml')
 MAX_VALUES = 50
 msstrip = re.compile(r'^(.*)\.\d+')
-
-
-def mysql_escape(string):
-    return re.sub("(?<![\\\])(')", "\\'", string)
 
 
 def readTime(ts):
@@ -103,16 +100,16 @@ class PostsConverter():
 
     def create_and_activate_revision(self, post):
         self.revisions.append(u"('%s','',%s,'%s',%s,'Initial revision',1,'%s')" % (
-            mysql_escape(post.get('Title', '')), post.get('OwnerUserId', 1), '',
+            escape_string(post.get('Title', '')), post.get('OwnerUserId', 1), '',
             post['Id'], readTime(post['CreationDate'])))
         return len(self.revisions)
 
     def make_sql(self, obj):
         state = self.get_state(obj)
         return u"(%s,'%s','%s',%s,'%s','%s',%s,'%s',%s,'%s',%s,'%s',%s,%s,%s)" % (
-                obj['Id'], mysql_escape(obj.get('Title', '')),
-                mysql_escape(self.readTagnames(obj.get('Tags', ''), obj['Id'])),
-                obj.get('OwnerUserId', '1'), mysql_escape(obj['Body']),
+                obj['Id'], escape_string(obj.get('Title', '')),
+                escape_string(self.readTagnames(obj.get('Tags', ''), obj['Id'])),
+                obj.get('OwnerUserId', '1'), escape_string(obj['Body']),
                 'question' if obj['PostTypeId'] == '1' else 'answer',
                 obj.get('ParentId', 'NULL'), readTime(obj['CreationDate']),
                 obj['Score'], state, obj.get('LastEditorUserId', '1'),
@@ -127,7 +124,7 @@ class PostsConverter():
         f = open(getFilePath("posts-misc.sql"), "w")
         writew(f, tags_header,
                self.tagmap.itervalues(),
-               lambda x: u"(%s, '%s',%s,'%s',%s)" % (x['id'], mysql_escape(x['name']),
+               lambda x: u"(%s, '%s',%s,'%s',%s)" % (x['id'], escape_string(x['name']),
                     x['created_by_id'], x['created_at'], x['used_count']))
         nodetags_header = u"INSERT INTO forum_node_tags(node_id,tag_id) VALUES "
         writew(f, nodetags_header, self.nodetags, lambda x: u"(%s,%s)" % x)
@@ -171,14 +168,14 @@ class UsersConverter():
     def make_sql_forum(self, obj):
         return u"(%s, '%s', '%s', '%s', %s, 0, 0, 0, '%s', '%s')" % (
                 obj['Id'],  readTime(obj.get('LastAccessDate')),
-                mysql_escape(obj.get('AboutMe', '')),
-                mysql_escape(obj.get('WebSiteUrl', '')),
-                obj['Reputation'], mysql_escape(obj.get('RealName', '')[:30]),
-                mysql_escape(obj.get('Location', ''))
+                escape_string(obj.get('AboutMe', '')),
+                escape_string(obj.get('WebSiteUrl', '')),
+                obj['Reputation'], escape_string(obj.get('RealName', '')[:30]),
+                escape_string(obj.get('Location', ''))
         )
 
     def make_sql_auth(self, obj):
-        name = mysql_escape(obj['DisplayName'].strip())
+        name = escape_string(obj['DisplayName'].strip())
         if name in self.usernames:
             name = name + obj['Id']
         self.usernames[name] = True
