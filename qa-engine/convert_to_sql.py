@@ -7,12 +7,17 @@ import re
 import time
 from lxml import etree
 from MySQLdb import escape_string
+from django.utils.encoding import smart_str, smart_unicode
 
 
 now = datetime.now()
 FILES = ('posts.xml', 'users.xml', 'votes.xml')
 MAX_VALUES = 50
 msstrip = re.compile(r'^(.*)\.\d+')
+
+
+def escape(string):
+    return smart_unicode(escape_string(smart_str(string)))
 
 
 def readTime(ts):
@@ -100,23 +105,23 @@ class PostsConverter():
 
     def create_and_activate_revision(self, post):
         self.revisions.append(u"('%s','',%s,'%s',%s,'Initial revision',1,'%s')" % (
-            escape_string(post.get('Title', '')), post.get('OwnerUserId', 1), '',
+            escape(post.get('Title', '')), post.get('OwnerUserId', 1), '',
             post['Id'], readTime(post['CreationDate'])))
         return len(self.revisions)
 
     def make_sql(self, obj):
         state = self.get_state(obj)
-        return u"(%s,'%s','%s',%s,'%s','%s',%s,'%s',%s,'%s',%s,'%s',%s,%s,%s)" % (
-                obj['Id'], escape_string(obj.get('Title', '')),
-                escape_string(self.readTagnames(obj.get('Tags', ''), obj['Id'])),
-                obj.get('OwnerUserId', '1'), escape_string(obj['Body']),
+        return u"(%s,'%s','%s',%s,'%s','%s',%s,'%s',%s,'%s',%s,'%s',%s,%s,%d)" % (
+                obj['Id'], escape(obj.get('Title', '')),
+                escape(self.readTagnames(obj.get('Tags', ''), obj['Id'])),
+                obj.get('OwnerUserId', '1'), escape(obj['Body']),
                 'question' if obj['PostTypeId'] == '1' else 'answer',
                 obj.get('ParentId', 'NULL'), readTime(obj['CreationDate']),
                 obj['Score'], state, obj.get('LastEditorUserId', '1'),
                 readTime(obj.get('LastActivityDate')),
                 self.create_and_activate_revision(obj),
-                obj['ViewCount'] if obj.get('ViewCount') else '0',
-                '1' if state else '0')
+                obj['ViewCount'] if obj.get('ViewCount') else u'0',
+                1 if state else 0)
 
     def finalize(self):
         tags_header = """INSERT INTO forum_tag
@@ -124,7 +129,7 @@ class PostsConverter():
         f = open(getFilePath("posts-misc.sql"), "w")
         writew(f, tags_header,
                self.tagmap.itervalues(),
-               lambda x: u"(%s, '%s',%s,'%s',%s)" % (x['id'], escape_string(x['name']),
+               lambda x: u"(%s, '%s',%s,'%s',%s)" % (x['id'], escape(x['name']),
                     x['created_by_id'], x['created_at'], x['used_count']))
         nodetags_header = u"INSERT INTO forum_node_tags(node_id,tag_id) VALUES "
         writew(f, nodetags_header, self.nodetags, lambda x: u"(%s,%s)" % x)
@@ -168,14 +173,14 @@ class UsersConverter():
     def make_sql_forum(self, obj):
         return u"(%s, '%s', '%s', '%s', %s, 0, 0, 0, '%s', '%s')" % (
                 obj['Id'],  readTime(obj.get('LastAccessDate')),
-                escape_string(obj.get('AboutMe', '')),
-                escape_string(obj.get('WebSiteUrl', '')),
-                obj['Reputation'], escape_string(obj.get('RealName', '')[:30]),
-                escape_string(obj.get('Location', ''))
+                escape(obj.get('AboutMe', '')),
+                escape(obj.get('WebSiteUrl', '')),
+                obj['Reputation'], escape(obj.get('RealName', '')[:30]),
+                escape(obj.get('Location', ''))
         )
 
     def make_sql_auth(self, obj):
-        name = escape_string(obj['DisplayName'].strip())
+        name = escape(obj['DisplayName'].strip())
         if name in self.usernames:
             name = name + obj['Id']
         self.usernames[name] = True
