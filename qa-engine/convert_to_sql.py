@@ -8,11 +8,11 @@ import time
 from lxml import etree
 from MySQLdb import escape_string
 from django.utils.encoding import smart_str, smart_unicode
-
+import gc
 
 now = datetime.now()
 FILES = ('posts.xml', 'users.xml', 'votes.xml')
-MAX_VALUES = 50
+MAX_VALUES = 250
 msstrip = re.compile(r'^(.*)\.\d+')
 
 
@@ -77,11 +77,20 @@ class PostsConverter():
     tagmap = {}
     nodetags = []
     accepted_answers = {}
-    revisions = []
+    revisions = 0
     header = """INSERT INTO forum_node
             (id, title, tagnames, author_id, body, node_type, parent_id,
             added_at, score, state_string, last_activity_by_id, last_activity_at,
             active_revision_id, extra_count, marked) VALUES """.encode("utf-8")
+
+    def __init__(self):
+        import sqlite3
+        self.con = sqlite3.connect("/media/DATA/sqlite.db")
+        cur = self.con.cursor()
+        cur.execute("CREATE TABLE IF NOT EXISTS tags " +
+                    "(name TEXT, used_count INT, PRIMARY KEY(name ASC))")
+        cur.execute("CREATE TABLE IF NOT EXISTS revisions (data TEXT)")
+
 
     def get_state(self, post):
         return ('(wiki)' if post.get('CommunityOwnedDate') else '') + \
@@ -92,22 +101,26 @@ class PostsConverter():
         tagnames = ts.replace(u'ö', '-').replace(u'é', '').replace(u'à', '')\
           .replace('><', ' ').replace('>', '').replace('<', '')
 
+        cur = self.con.cursor()
         for name in tagnames.split(' '):
-            otag = self.tagmap.get(name,
-                {'name': name, 'used_count': 0,
-                'created_by_id': 1, 'id': len(self.tagmap) + 1,
-                'created_at': now})
-            otag['used_count'] += 1
-            self.tagmap[name] = otag
-            self.nodetags.append((postid, otag['id']))
+            cur.execute("SELECT rowid, name, used_count FROM tags WHERE name=?", (name,))
+            otag = cur.fetchone()
+            if otag == None:
+                cur.execute("INSERT INTO tags VALUES(?,?)", (name, 1))
+                self.nodetags.append((postid, cur.lastrowid))
+            else:
+                cur.execute("UPDATE tags SET used_count=used_count+1 WHERE rowid=?", (otag[0],))
+                self.nodetags.append((postid, otag[0]))
 
         return tagnames
 
     def create_and_activate_revision(self, post):
-        self.revisions.append(u"('%s','',%s,'%s',%s,'Initial revision',1,'%s')" % (
+        cur = self.con.cursor()
+        cur.execute("INSERT INTO revisions VALUES(?)", (u"('%s','',%s,'%s',%s,'Initial revision',1,'%s')" % (
             escape(post.get('Title', '')), post.get('OwnerUserId', 1), '',
-            post['Id'], readTime(post['CreationDate'])))
-        return len(self.revisions)
+            post['Id'], readTime(post['CreationDate'])),))
+        self.revisions += 1
+        return self.revisions
 
     def make_sql(self, obj):
         state = self.get_state(obj)
@@ -127,16 +140,18 @@ class PostsConverter():
         tags_header = """INSERT INTO forum_tag
             (id, name, created_by_id, created_at, used_count) VALUES """
         f = open(getFilePath("posts-misc.sql"), "w")
-        writew(f, tags_header,
-               self.tagmap.itervalues(),
-               lambda x: u"(%s, '%s',%s,'%s',%s)" % (x['id'], escape(x['name']),
-                    x['created_by_id'], x['created_at'], x['used_count']))
+        cur = self.con.cursor()
+
+        writew(f, tags_header, cur.execute("SELECT rowid, name, used_count FROM tags"),
+               lambda x: u"(%s, '%s',%s,'%s',%s)" % (x[0], escape(x[1]), 1, now, x[2]) )
+
         nodetags_header = u"INSERT INTO forum_node_tags(node_id,tag_id) VALUES "
         writew(f, nodetags_header, self.nodetags, lambda x: u"(%s,%s)" % x)
         revisions_header = """INSERT INTO forum_noderevision
             (title, tagnames, author_id, body, node_id,
                 summary, revision, revised_at) VALUES """
-        writew(f, revisions_header, self.revisions, lambda x: x)
+
+        writew(f, revisions_header, cur.execute("SELECT data FROM revisions"), lambda x: x[0])
         f.write(";\n")
         f.close()
 
@@ -156,6 +171,11 @@ class PostsConverter():
             elem.clear()
             while elem.getprevious() is not None:
                 del elem.getparent()[0]
+
+            if not counter % 100:
+                gc.collect()
+
+        print "Almost done..."
         writer.close()
         self.finalize()
 
@@ -304,5 +324,5 @@ if __name__ == "__main__":
         print "Please provide path to one of the following files:"
         print FILES
     else:
-        files_count = int(sys.argv[2]) if len(sys.argv) > 1 else 6
+        files_count = int(sys.argv[2]) if len(sys.argv) > 2 else 6
         convert(sys.argv[1], files_count)
