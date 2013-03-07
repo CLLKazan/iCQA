@@ -24,6 +24,9 @@ import java.sql.*;
 public class Main {
 
     public static SimpleFSDirectory INDEX_DIR;
+    public static String sql = "SELECT node_id, title, body " +
+            "FROM forum_node INNER JOIN forum_node_tags ON forum_node.id=forum_node_tags.node_id " +
+            "WHERE tag_id=70";
 
     public static void main(String[] args) throws Exception {
 
@@ -53,12 +56,11 @@ public class Main {
             IndexWriter writer = new IndexWriter(INDEX_DIR, config);
 
             System.out.println("Indexing to directory '" + INDEX_DIR.getDirectory().getPath() + "'...");
-            String sql = "SELECT id, title, body FROM forum_node WHERE parent_id is NULL";
             Statement stmt = getConnection().createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             while (rs.next()) {
                 Document d = new Document();
-                d.add(new IntField("id", rs.getInt("id"), Field.Store.YES));
+                d.add(new IntField("id", rs.getInt("node_id"), Field.Store.YES));
                 d.add(new TextField("title", rs.getString("title"), Field.Store.YES));
                 d.add(new TextField("body", rs.getString("body"), Field.Store.NO));
                 writer.addDocument(d);
