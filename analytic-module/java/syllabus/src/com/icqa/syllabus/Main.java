@@ -16,11 +16,13 @@ import org.ninit.models.bm25f.BM25FParameters;
 
 import java.io.*;
 import java.sql.*;
+import java.util.ArrayList;
 
 
 public class Main {
 
-    public static SimpleFSDirectory INDEX_DIR;
+    public static File INDEX_DIR = new File("index");
+
     public static final String BM_25_F_PARAMETERS = "BM25FParameters";
 
     public static String sql = "SELECT node_id, title, body FROM forum_node " +
@@ -43,9 +45,12 @@ public class Main {
             "  FROM forum_node WHERE marked=1 GROUP BY parent_id\n" +
             ") as answers ON questions_by_tag.id=answers.parent_id";
 
+
+    private SimpleFSDirectory indexDirectory;
+
+
     public static void main(String[] args) throws Exception {
 
-        INDEX_DIR = new SimpleFSDirectory(new File("index"));
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in, "UTF-8"));
         String line = in.readLine();
 
@@ -53,7 +58,7 @@ public class Main {
             indexDb();
         }
         else if(line.equals("search")){
-            search(new File("syllabus.txt"));
+            search();
         }
     }
 
@@ -69,7 +74,7 @@ public class Main {
             StandardAnalyzer analyzer = new StandardAnalyzer(Version.LUCENE_29);
             IndexWriter writer = new IndexWriter(INDEX_DIR, analyzer);
 
-            System.out.println("Indexing to directory '" + INDEX_DIR.getFile().getAbsolutePath() + "'...");
+            System.out.println("Indexing to directory '" + INDEX_DIR.getAbsolutePath() + "'...");
             Connection connection = getConnection();
             Statement questionsStatement = connection.createStatement();
             PreparedStatement answerStatement = connection.prepareStatement(answer_sql);
@@ -114,30 +119,32 @@ public class Main {
         }
     }
 
-    public static void search(File queries) throws IOException {
+    public static ArrayList<String> getSyllabus() throws IOException {
+        ArrayList<String> result = new ArrayList<String>();
+        BufferedReader reader = new BufferedReader(new FileReader("syllabus.txt"));
+        String line;
+        while((line = reader.readLine()) != null){
+            result.add(line);
+        }
+        return result;
+    }
+
+    public static void search() throws IOException {
         try{
-            String[] fields = {"title", "body", "answer"};
-            float[]  boosts = {1f, 0.0f, 0.0f};
-            float[]  bParams= {0.75f, 0.75f, 0.75f};
+            Connection connection = getConnection();
+            PreparedStatement selectStatement = connection.prepareStatement("SELECT * FROM forum_node WHERE id=?");
 
-            BM25FParameters.load(BM_25_F_PARAMETERS);
+            BM25FSearch bm25FSearch = new BM25FSearch(BM_25_F_PARAMETERS);
 
-            IndexSearcher searcher = new IndexSearcher(IndexReader.open(INDEX_DIR));
-            StandardAnalyzer analyzer = new StandardAnalyzer(Version.LUCENE_29);
-
-            BufferedReader reader = new BufferedReader(new FileReader(queries));
-            String line;
-            while((line = reader.readLine()) != null){
-                BM25BooleanQuery query = new BM25BooleanQuery(line, fields, analyzer, boosts, bParams);
-
-                TopDocs topDocs = searcher.search(query, 5);
-
-                System.out.println("Found " + topDocs.totalHits + " results for '" + line + "'");
-                ScoreDoc[] hits = topDocs.scoreDocs;
-                for (int i = 0; i < hits.length; i++){
-                    Document doc = searcher.doc(hits[i].doc);
-                    String title = doc.get("title");
-                    System.out.println((i + 1) + ": " + hits[i].score + "\t\t" + doc.get("id") + "\t\t" + title);
+            for(String line : getSyllabus()){
+                System.out.println("\t" + line);
+                long[] docIds = bm25FSearch.getTopN(line, 5);
+                for(long id : docIds){
+                    selectStatement.setLong(1, id);
+                    selectStatement.execute();
+                    ResultSet resultSet = selectStatement.getResultSet();
+                    if(resultSet.next())
+                        System.out.println(id + "\t" + resultSet.getString("title"));
                 }
             }
         }catch(Exception e){
