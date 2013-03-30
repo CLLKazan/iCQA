@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>iCQA Project</title>
+    <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'/>
+
+    <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css">
+
+    <style>
+        .container{max-width: 1024px;width: 100%;}
+        .expandable{height: 1.4em;overflow: hidden;cursor: pointer;}
+        .expandable.expanded{height: auto;}
+        .syllabus-item .document-list>div{margin-left: 20px;}
+        .question{font-size: 18px;margin-bottom: 3px;}
+        .syllabus-item{border: 1px solid #c0c0c0;padding: 5px;}
+        .placeholder{color: #666;background-color: #cecece;font-style: italic;padding: 3px;}
+        .document{background-color:#f4f5c5;padding:5px;border:1px solid #caa;border-radius:2px;margin-bottom:5px;max-width: 500px}
+        .title a{font-style: italic;}
+        .screen{height: 480px;overflow-y: auto}
+        .modal-body .answers div{margin-bottom: 30px;border-top: 1px solid #ddd;padding: 5px;background: #aacccc;color: #000;}
+        .modal-body .answers .accepted{background: #aaffcc}
+        .instructions{margin-top: 5px}
+    </style>
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js"></script>
+
+    <script type='text/javascript' src='https://s3.amazonaws.com/mturk-public/externalHIT_v1.js'></script>
+
+    <script type="text/javascript">
+        var weightScheme = "$weightScheme";
+        var syllabus = $syllabus$;
+        var posts = [
+            $posts$
+        ];
+
+        function showDetails(post){
+            var answers = "";
+            for(var i = 0; post.answers && i < post.answers.length; ++i){
+                answers += (post.answers[i].marked ? '<div class="accepted" title="Acceted Answer">' :"<div>") 
+                    + post.answers[i].body + "</div>";
+            }
+
+            var modal = $('#modal');
+            modal.find('.title').html(post.title);
+            modal.find('.body').html(post.body);
+            modal.find('.answers').html(answers);
+            modal.show();
+            return false;
+        }
+    </script>
+
+</head>
+<body>
+    <script type="text/template" id="syllabus-item">
+        <div class="question">
+            <%- text %>
+        </div>
+        <div class="document-list" placeholder="Drag documents here">
+            <div class="placeholder">Drag documents here</div>
+        </div>
+    </script>
+
+    <script type="text/template" id="post-item">
+        <div class="title"><i><%- title %></i>
+            <a href="#" onclick="return showDetails(posts[<%- index %>])">Show details</a></div>
+    </script>
+
+    <div class="modal" id="modal" style="display: none">
+      <div class="modal-header">
+        <button type="button" class="close" onclick="$('#modal').hide();">&times;</button>
+        <h3 class="title">Modal header</h3>
+      </div>
+      <div class="modal-body">
+        <div class="body"></div>
+        <br><h4>Answers:</h4>
+        <div class="answers"></div>
+      </div>
+      <div class="modal-footer"></div>
+    </div>
+
+    <div class="container">
+        <div class="row-fluid instructions">Classify the questions from the right column by dragging them into the appropriate slots on the left side. Each questions consists of a title and a body. You can view the body by clicking on the "Show details" link. Also there are several answers provided with each question in the details. No more than one answer marked as accepted (highlighted with green in details window).<br>You can leave a question unclassified if there is not an appropriate topic</div>
+        <br>
+        <div class="row-fluid">
+            <div class="span6 screen" id="syllabus"></div>
+            <div class="span6 document-list screen" placeholder="Move back and drop here" id="document-list"></div>
+        </div>
+        <div class="row-fluid">
+            <form name='mturk_form' method='post' id='mturk_form' class='span6 text-right'>
+                <input type='hidden' name='assignmentId' id='assignmentId'>
+                <input type='hidden' name='result' id='result'>
+                <br><input type='submit' class="btn submit-btn">
+            </form>
+            <script type="text/javascript">turkSetAssignmentID();</script>
+        </div>
+    </div>
+
+    <script type="text/javascript">$(function(){
+        var template = $('#syllabus-item').html()
+        for(var i=0; i < syllabus.length; ++i){
+            $('<div/>', {class: 'syllabus-item'}).data('i', i).append(
+                template.replace(/<\%\-\s*text\s*\%>/, syllabus[i])
+            ).appendTo('#syllabus')
+        }
+
+        template = $('#post-item').html();
+        for(var i=0; i < posts.length; ++i){
+            $('<div/>', {class: 'document'}).data('id', posts[i].id).append(
+                template.replace(/<\%\-\s*title\s*\%>/, posts[i].title)
+                        .replace(/<\%\-\s*index\s*\%>/, i)
+            ).appendTo('#document-list')
+        }
+
+
+        $('.container').on('click', '.expandable', function(){
+            $(this).toggleClass('expanded', 500)
+                .children('span').toggleClass('icon-chevron-down').toggleClass('icon-chevron-up')
+        })
+
+        $('#mturk_form').submit(function(){
+            var res = []
+            var items = $('.syllabus-item');
+            for(var i=0; i < items.length; ++i){
+                var item = items.eq(i)
+                res.push({
+                    i: item.data('i'),
+                    text: item.find('.question').html().trim(),
+                    posts: []
+                });
+                var posts = item.find('.document')
+                for(var j=0; j < posts.length; ++j){
+                    res[i].posts.push(posts.eq(j).data('id'))
+                }
+            }
+            $('#result').val(JSON.stringify({weightScheme: weightScheme, results: res}));
+        })
+
+        function makeDraggable(selector){
+            $(selector).draggable({
+              appendTo: "body",
+              helper: "clone"
+            });
+        }
+        function makeDroppable(selector){
+            $(selector).droppable({
+              activeClass: "ui-state-default",
+              hoverClass: "ui-state-hover",
+              accept: ":not(.ui-sortable-helper)",
+              drop: function( event, ui ) {
+                $(this).find( ".placeholder" ).remove();
+                makeDraggable($( "<div/>", { class: "document" }).data('id', ui.draggable.data('id'))
+                    .html(ui.draggable.html()).appendTo(this));
+                var parent = ui.draggable.parent();
+                ui.draggable.remove();
+                if(parent.children().length == 0)
+                    parent.append('<div class="placeholder">' + parent.attr('placeholder') + '</div>');
+              }
+            });
+        }
+
+        makeDraggable('.document');
+        makeDroppable('.document-list');
+    })</script>
+
+    <!-- minified JSON.js library from https://github.com/douglascrockford/JSON-js -->
+    <script type="text/javascript">
+        if(typeof JSON!=="object"){JSON={}}(function(){"use strict";function f(e){return e<10?"0"+e:e}function quote(e){escapable.lastIndex=0;return escapable.test(e)?'"'+e.replace(escapable,function(e){var t=meta[e];return typeof t==="string"?t:"\\u"+("0000"+e.charCodeAt(0).toString(16)).slice(-4)})+'"':'"'+e+'"'}function str(e,t){var n,r,i,s,o=gap,u,a=t[e];if(a&&typeof a==="object"&&typeof a.toJSON==="function"){a=a.toJSON(e)}if(typeof rep==="function"){a=rep.call(t,e,a)}switch(typeof a){case"string":return quote(a);case"number":return isFinite(a)?String(a):"null";case"boolean":case"null":return String(a);case"object":if(!a){return"null"}gap+=indent;u=[];if(Object.prototype.toString.apply(a)==="[object Array]"){s=a.length;for(n=0;n<s;n+=1){u[n]=str(n,a)||"null"}i=u.length===0?"[]":gap?"[\n"+gap+u.join(",\n"+gap)+"\n"+o+"]":"["+u.join(",")+"]";gap=o;return i}if(rep&&typeof rep==="object"){s=rep.length;for(n=0;n<s;n+=1){if(typeof rep[n]==="string"){r=rep[n];i=str(r,a);if(i){u.push(quote(r)+(gap?": ":":")+i)}}}}else{for(r in a){if(Object.prototype.hasOwnProperty.call(a,r)){i=str(r,a);if(i){u.push(quote(r)+(gap?": ":":")+i)}}}}i=u.length===0?"{}":gap?"{\n"+gap+u.join(",\n"+gap)+"\n"+o+"}":"{"+u.join(",")+"}";gap=o;return i}}if(typeof Date.prototype.toJSON!=="function"){Date.prototype.toJSON=function(e){return isFinite(this.valueOf())?this.getUTCFullYear()+"-"+f(this.getUTCMonth()+1)+"-"+f(this.getUTCDate())+"T"+f(this.getUTCHours())+":"+f(this.getUTCMinutes())+":"+f(this.getUTCSeconds())+"Z":null};String.prototype.toJSON=Number.prototype.toJSON=Boolean.prototype.toJSON=function(e){return this.valueOf()}}var cx=/[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,escapable=/[\\\"\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,gap,indent,meta={"\b":"\\b","   ":"\\t","\n":"\\n","\f":"\\f","\r":"\\r",'"':'\\"',"\\":"\\\\"},rep;if(typeof JSON.stringify!=="function"){JSON.stringify=function(e,t,n){var r;gap="";indent="";if(typeof n==="number"){for(r=0;r<n;r+=1){indent+=" "}}else if(typeof n==="string"){indent=n}rep=t;if(t&&typeof t!=="function"&&(typeof t!=="object"||typeof t.length!=="number")){throw new Error("JSON.stringify")}return str("",{"":e})}}if(typeof JSON.parse!=="function"){JSON.parse=function(text,reviver){function walk(e,t){var n,r,i=e[t];if(i&&typeof i==="object"){for(n in i){if(Object.prototype.hasOwnProperty.call(i,n)){r=walk(i,n);if(r!==undefined){i[n]=r}else{delete i[n]}}}}return reviver.call(e,t,i)}var j;text=String(text);cx.lastIndex=0;if(cx.test(text)){text=text.replace(cx,function(e){return"\\u"+("0000"+e.charCodeAt(0).toString(16)).slice(-4)})}if(/^[\],:{}\s]*$/.test(text.replace(/\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g,"@").replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g,"]").replace(/(?:^|:|,)(?:\s*\[)+/g,""))){j=eval("("+text+")");return typeof reviver==="function"?walk({"":j},""):j}throw new SyntaxError("JSON.parse")}}})()
+    </script>
+</body>
+</html>

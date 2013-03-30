@@ -1,25 +1,18 @@
 package com.icqa.syllabus;
 
 
-import com.amazonaws.mturk.addon.HITDataCSVReader;
-import com.amazonaws.mturk.addon.HITDataCSVWriter;
-import com.amazonaws.mturk.addon.HITDataInput;
-import com.amazonaws.mturk.addon.HITDataOutput;
-import com.amazonaws.mturk.addon.HITProperties;
-import com.amazonaws.mturk.addon.HITQuestion;
+import com.amazonaws.mturk.addon.*;
 import com.amazonaws.mturk.requester.HIT;
 import com.amazonaws.mturk.service.axis.RequesterService;
 import com.amazonaws.mturk.util.PropertiesClientConfig;
 import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
-import org.apache.lucene.queryParser.ParseException;
 
-import java.awt.image.AreaAveragingScaleFilter;
 import java.io.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -28,16 +21,18 @@ import java.util.Random;
 
 public class Mturk {
 
-    public static final int POSTS_COUNT = 2;
-    public static final int HITS_COUNT = 10;
+    public static final int POSTS_PER_TOPIC = 2;
+    public static final int HITS_COUNT = 2;
+    public static final int TOPICS_PER_HIT = 8;
+    public static final int TOP_N = 50;
     // Defining the locations of the input files
     private RequesterService service;
-    private static String inputFile = "mturk.input";
-    private static String propertiesFile = "mturkHIT.properties";
-    private static String questionFile = "mturk.question";
+    private static String inputFile = "res/mturk.input";
+    private static String propertiesFile = "res/mturkHIT.properties";
+    private static String questionFile = "res/mturk.question";
 
     public Mturk() {
-        service = new RequesterService(new PropertiesClientConfig("mturk.properties"));
+        service = new RequesterService(new PropertiesClientConfig("res/mturk.properties"));
     }
 
     /**
@@ -114,14 +109,23 @@ public class Mturk {
 
     Random random = new Random();
 
-    public String pickPosts(ArrayList<SyllabusItem> syllabusItems){
+
+    public ArrayList<Topic> pickTopics(ArrayList<Topic> allTopics){
+        ArrayList<Topic> result = new ArrayList<Topic>(allTopics);
+        for(int i=allTopics.size(); i > TOPICS_PER_HIT; --i){
+            result.remove(random.nextInt(result.size()));
+        }
+        return result;
+    }
+
+    public String pickPosts(ArrayList<Topic> topics){
 
         ArrayList<String> posts = new ArrayList<String>();
 
-        for(SyllabusItem item : syllabusItems){
-            for(int i=0; i < POSTS_COUNT; ++i){
+        for(Topic item : topics){
+            for(int i=0; i < POSTS_PER_TOPIC; ++i){
                 int idx = random.nextInt(item.mPosts.size());
-                posts.add(item.mPosts.get(idx).toJSON());
+                posts.add(item.mPosts.remove(idx).toJSON());
             }
         }
 
@@ -129,50 +133,87 @@ public class Mturk {
         return StringUtils.join(posts, ",");
     }
 
+    public static String readFile(String name) throws IOException {
+        StringBuilder contents = new StringBuilder();
+        BufferedReader reader = new BufferedReader(new FileReader(name));
+        String line1;
+        while((line1 = reader.readLine()) != null){
+            contents.append(line1);
+            contents.append("\n");
+        }
+        return contents.toString();
+    }
+
+    public static Topic.Post getPost(long postId, Connection connection) throws SQLException {
+        PreparedStatement selectStatement = connection.prepareStatement("SELECT * FROM forum_node WHERE id=?");
+        PreparedStatement answersStatement = connection.prepareStatement(
+                "SELECT * FROM forum_node WHERE parent_id=? ORDER BY marked DESC, score DESC");
+
+        selectStatement.setLong(1, postId);
+        selectStatement.execute();
+        ResultSet resultSet = selectStatement.getResultSet();
+        if(resultSet.next()){
+            ArrayList<Topic.Post> answers = new ArrayList<Topic.Post>();
+            answersStatement.setLong(1, postId);
+            answersStatement.execute();
+            ResultSet answersResultSet = answersStatement.getResultSet();
+            while(answersResultSet.next()){
+                answers.add(new Topic.Post(answersResultSet.getLong("id"), answersResultSet.getString("title"),
+                        answersResultSet.getString("body"), answersResultSet.getInt("score"),
+                        answersResultSet.getString("state_string").contains("accepted"), null));
+                System.out.println(answersResultSet.getString("state_string"));
+            }
+            return new Topic.Post(postId, resultSet.getString("title"), resultSet.getString("body"),
+                resultSet.getInt("score"), resultSet.getBoolean("marked"), answers);
+        }
+        return null;
+    }
+
     public void createInputFile(){
         try{
-            StringBuilder templateBuilder = new StringBuilder();
-            BufferedReader reader = new BufferedReader(new FileReader("/home/ramis/amt.html"));
-            String line1;
-            while((line1 = reader.readLine()) != null){
-                templateBuilder.append(line1);
-                templateBuilder.append("\n");
-            }
-            String template = templateBuilder.toString();
+            String template = readFile("res/hit.html");
 
             ArrayList<String> syllabus = Main.getSyllabus();
             Connection connection = Main.getConnection();
-            PreparedStatement selectStatement = connection.prepareStatement("SELECT * FROM forum_node WHERE id=?");
-
 
             BM25FSearch bm25FSearch = new BM25FSearch(Main.BM_25_F_PARAMETERS);
+            bm25FSearch.setBoosts(new float[]{0.6f, 0.3f, 0.1f});
 
-            ArrayList<SyllabusItem> syllabusItems = new ArrayList<SyllabusItem>(syllabus.size());
+            ArrayList<Topic> topics = new ArrayList<Topic>(syllabus.size());
             for(String line : syllabus){
-                long[] docIds = bm25FSearch.getTopN(line, 5);
+                long[] docIds = bm25FSearch.getTopN(line, TOP_N);
 
-                ArrayList<SyllabusItem.Post> posts = new ArrayList<SyllabusItem.Post>(docIds.length);
+                ArrayList<Topic.Post> posts = new ArrayList<Topic.Post>(docIds.length);
                 for(long id : docIds){
-                    selectStatement.setLong(1, id);
-                    selectStatement.execute();
-                    ResultSet resultSet = selectStatement.getResultSet();
-                    if(resultSet.next()){
-                        posts.add(new SyllabusItem.Post(id, resultSet.getString("title"),
-                                resultSet.getString("body"), "Answer Not Available"/*resultSet.getString("answer")*/));
+                    Topic.Post post = getPost(id, connection);
+                    if(post != null){
+                        posts.add(post);
                     }
                 }
 
-                syllabusItems.add(new SyllabusItem(line, posts));
+                topics.add(new Topic(line, posts));
             }
 
-            String syllabusLine = JSONArray.fromObject(syllabus.toArray()).toString();
+            BufferedWriter inputFileWriter = new BufferedWriter(new FileWriter(inputFile));
+            inputFileWriter.write("id\n");
             for(int i=0; i < HITS_COUNT; ++i){
-                String postsString = pickPosts(syllabusItems);
-                String html = template.replace("$syllabus$", syllabusLine).replace("$posts$", postsString);
-                BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("hit" + i + ".html"));
+                inputFileWriter.write(i + "\n");
+
+                ArrayList<Topic> chosenTopics = pickTopics(topics);
+                ArrayList<String> topicNames = new ArrayList<String>(chosenTopics.size());
+                for(Topic topic : chosenTopics)
+                    topicNames.add(topic.mTitle);
+                String topicsString = JSONArray.fromObject(topicNames).toString();
+
+                String postsString = pickPosts(chosenTopics);
+
+                String html = template.replace("$syllabus$", topicsString).replace("$posts$", postsString)
+                        .replace("$weightScheme", bm25FSearch.getWeightScheme());
+                BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("hits/hit" + i + ".html"));
                 bufferedWriter.write(html);
                 bufferedWriter.close();
             }
+            inputFileWriter.close();
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -182,9 +223,7 @@ public class Mturk {
 
         Mturk app = new Mturk();
 
-        if (app.hasEnoughFund()) {
-            //app.createInputFile();
-            app.createSiteCategoryHITs();
-        }
+        //app.createInputFile();
+        app.createSiteCategoryHITs();
     }
 }

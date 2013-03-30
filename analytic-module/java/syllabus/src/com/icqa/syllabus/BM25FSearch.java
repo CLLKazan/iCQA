@@ -7,20 +7,20 @@ import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.store.SimpleFSDirectory;
 import org.apache.lucene.util.Version;
 import org.ninit.models.bm25.BM25BooleanQuery;
 import org.ninit.models.bm25f.BM25FParameters;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.text.DecimalFormat;
 
 
 public class BM25FSearch {
     private String[] fields = {"title", "body", "answer"};
-    private float[]  boosts = {1f, 0.0f, 0.0f};
+    private float[]  boosts = {0.8f, 0.2f, 0.0f};
     private float[]  bParams= {0.75f, 0.75f, 0.75f};
+
+    DecimalFormat decimalFormat = new DecimalFormat("#.##");
 
     IndexSearcher searcher;
     StandardAnalyzer analyzer;
@@ -41,14 +41,20 @@ public class BM25FSearch {
 
         ScoreDoc[] hits = topDocs.scoreDocs;
         n = Math.min(n, hits.length);
+        System.out.println("Got " + n + " results for '" + queryParam + "'");
         for (int i = 0; i < n; i++){
             Document doc = searcher.doc(hits[i].doc);
             res[i] = Long.parseLong(doc.get("id"));
+            System.out.println(hits[i].score + "\t\t" + doc.get("title"));
         }
         return res;
     }
 
     public void setBoosts(float[] newBoosts){
         boosts = newBoosts;
+    }
+
+    public String getWeightScheme(){
+        return String.format("%.2f %.2f %.2f", boosts[0], boosts[1], boosts[2]);
     }
 }

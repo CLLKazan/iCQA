@@ -1,9 +1,7 @@
 Java Fundamentals
-Introducing Data Types and Operators
+Data Types and Operators
 Program Control Statements
-Introducing Classes, Objects, and Methods
-More Data Types and Operators
-A Closer Look at Methods and Classes
+Classes, Objects, and Methods
 Inheritance
 Packages and Interfaces
 Exception Handling

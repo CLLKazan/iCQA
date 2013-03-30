@@ -3,16 +3,9 @@ package com.icqa.syllabus;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.store.SimpleFSDirectory;
 import org.apache.lucene.util.Version;
 import org.jsoup.Jsoup;
-import org.ninit.models.bm25.BM25BooleanQuery;
-import org.ninit.models.bm25f.BM25FParameters;
 
 import java.io.*;
 import java.sql.*;
@@ -27,10 +20,10 @@ public class Main {
 
     public static String sql = "SELECT node_id, title, body FROM forum_node " +
             "INNER JOIN forum_node_tags ON forum_node.id=forum_node_tags.node_id " +
-            "WHERE tag_id=70";
+            "WHERE tag_id=70 AND score>0";
 
-    public static String answer_sql = "SELECT parent_id, GROUP_CONCAT(body) as answer FROM forum_node " +
-            "WHERE parent_id=? GROUP BY parent_id";
+    public static String answer_sql = "SELECT parent_id, GROUP_CONCAT(body) as answer, MAX(marked) as marked " +
+            "FROM forum_node WHERE parent_id=? GROUP BY parent_id";
 
     public static String asql = "SELECT node_id, title, body, answer FROM (\n" +
             "  SELECT * FROM (\n" +
@@ -46,20 +39,9 @@ public class Main {
             ") as answers ON questions_by_tag.id=answers.parent_id";
 
 
-    private SimpleFSDirectory indexDirectory;
-
-
     public static void main(String[] args) throws Exception {
-
-        BufferedReader in = new BufferedReader(new InputStreamReader(System.in, "UTF-8"));
-        String line = in.readLine();
-
-        if(line.equals("index")) {
-            indexDb();
-        }
-        else if(line.equals("search")){
-            search();
-        }
+        indexDb();
+        //search();
     }
 
     public static Connection getConnection() throws ClassNotFoundException, IllegalAccessException, InstantiationException, SQLException {
@@ -79,17 +61,19 @@ public class Main {
             Statement questionsStatement = connection.createStatement();
             PreparedStatement answerStatement = connection.prepareStatement(answer_sql);
             ResultSet rs = questionsStatement.executeQuery(sql);
-            while (rs.next()) {
-                Document d = new Document();
 
+            while (rs.next()) {
                 answerStatement.setInt(1, rs.getInt("node_id"));
                 answerStatement.execute();
                 ResultSet resultSet = answerStatement.getResultSet();
 
+                if(!resultSet.next() || !resultSet.getBoolean("marked")) continue;
+
                 String title = rs.getString("title");
                 String body = Jsoup.parse(rs.getString("body")).text();
-                String answer = resultSet.next() ? Jsoup.parse(resultSet.getString("answer")).text() : "";
+                String answer =  Jsoup.parse(resultSet.getString("answer")).text();
 
+                Document d = new Document();
                 d.add(new Field("id", rs.getString("node_id"), Field.Store.YES, Field.Index.NOT_ANALYZED));
 
                 d.add(new Field("title", title, Field.Store.YES, Field.Index.ANALYZED));
