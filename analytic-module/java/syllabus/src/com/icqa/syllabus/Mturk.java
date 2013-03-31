@@ -23,8 +23,7 @@ public class Mturk {
 
     public static final int POSTS_PER_TOPIC = 2;
     public static final int HITS_COUNT = 2;
-    public static final int TOPICS_PER_HIT = 8;
-    public static final int TOP_N = 50;
+    public static final int TOP_N = 10;
     // Defining the locations of the input files
     private RequesterService service;
     private static String inputFile = "res/mturk.input";
@@ -110,10 +109,14 @@ public class Mturk {
     Random random = new Random();
 
 
-    public ArrayList<Topic> pickTopics(ArrayList<Topic> allTopics){
-        ArrayList<Topic> result = new ArrayList<Topic>(allTopics);
-        for(int i=allTopics.size(); i > TOPICS_PER_HIT; --i){
-            result.remove(random.nextInt(result.size()));
+    public ArrayList<Topic> getTopics(ArrayList<Topic> allTopics){
+        ArrayList<Topic> result = new ArrayList<Topic>();
+        for(Topic topic : allTopics){
+            if(!topic.hasChildren()){
+                result.add(topic);
+            }else {
+                result.addAll(getTopics(topic.mChildren));
+            }
         }
         return result;
     }
@@ -123,13 +126,12 @@ public class Mturk {
         ArrayList<String> posts = new ArrayList<String>();
 
         for(Topic item : topics){
-            for(int i=0; i < POSTS_PER_TOPIC; ++i){
+            for(int i=0; item.mPosts.size() > 0 && i < POSTS_PER_TOPIC; ++i){
                 int idx = random.nextInt(item.mPosts.size());
                 posts.add(item.mPosts.remove(idx).toJSON());
             }
         }
 
-        Collections.shuffle(posts);
         return StringUtils.join(posts, ",");
     }
 
@@ -147,7 +149,7 @@ public class Mturk {
     public static Topic.Post getPost(long postId, Connection connection) throws SQLException {
         PreparedStatement selectStatement = connection.prepareStatement("SELECT * FROM forum_node WHERE id=?");
         PreparedStatement answersStatement = connection.prepareStatement(
-                "SELECT * FROM forum_node WHERE parent_id=? ORDER BY marked DESC, score DESC");
+                "SELECT * FROM forum_node WHERE parent_id=? ORDER BY score DESC");
 
         selectStatement.setLong(1, postId);
         selectStatement.execute();
@@ -161,7 +163,6 @@ public class Mturk {
                 answers.add(new Topic.Post(answersResultSet.getLong("id"), answersResultSet.getString("title"),
                         answersResultSet.getString("body"), answersResultSet.getInt("score"),
                         answersResultSet.getString("state_string").contains("accepted"), null));
-                System.out.println(answersResultSet.getString("state_string"));
             }
             return new Topic.Post(postId, resultSet.getString("title"), resultSet.getString("body"),
                 resultSet.getInt("score"), resultSet.getBoolean("marked"), answers);
@@ -169,29 +170,40 @@ public class Mturk {
         return null;
     }
 
+    public ArrayList<Topic> loadSyllabus(String json){
+        JSONArray jsonArray = JSONArray.fromObject(json);
+
+        ArrayList<Topic> res = new ArrayList<Topic>(jsonArray.size());
+        for(int i=0; i<jsonArray.size(); ++i){
+            res.add(new Topic(jsonArray.getJSONObject(i), null));
+        }
+
+        return res;
+    }
+
     public void createInputFile(){
         try{
             String template = readFile("res/hit.html");
 
-            ArrayList<String> syllabus = Main.getSyllabus();
             Connection connection = Main.getConnection();
 
             BM25FSearch bm25FSearch = new BM25FSearch(Main.BM_25_F_PARAMETERS);
             bm25FSearch.setBoosts(new float[]{0.6f, 0.3f, 0.1f});
 
-            ArrayList<Topic> topics = new ArrayList<Topic>(syllabus.size());
-            for(String line : syllabus){
-                long[] docIds = bm25FSearch.getTopN(line, TOP_N);
 
-                ArrayList<Topic.Post> posts = new ArrayList<Topic.Post>(docIds.length);
+            String syllabusJSON = readFile("res/syllabus.json");
+            ArrayList<Topic> syllabus = loadSyllabus(syllabusJSON);
+            ArrayList<Topic> topics = getTopics(syllabus);
+
+            for(Topic topic : topics){
+                long[] docIds = bm25FSearch.getTopN(topic.mTitle, TOP_N);
+
                 for(long id : docIds){
                     Topic.Post post = getPost(id, connection);
                     if(post != null){
-                        posts.add(post);
+                        topic.mPosts.add(post);
                     }
                 }
-
-                topics.add(new Topic(line, posts));
             }
 
             BufferedWriter inputFileWriter = new BufferedWriter(new FileWriter(inputFile));
@@ -199,16 +211,9 @@ public class Mturk {
             for(int i=0; i < HITS_COUNT; ++i){
                 inputFileWriter.write(i + "\n");
 
-                ArrayList<Topic> chosenTopics = pickTopics(topics);
-                ArrayList<String> topicNames = new ArrayList<String>(chosenTopics.size());
-                for(Topic topic : chosenTopics)
-                    topicNames.add(topic.mTitle);
-                String topicsString = JSONArray.fromObject(topicNames).toString();
-
-                String postsString = pickPosts(chosenTopics);
-
-                String html = template.replace("$syllabus$", topicsString).replace("$posts$", postsString)
-                        .replace("$weightScheme", bm25FSearch.getWeightScheme());
+                String postsString = pickPosts(topics);
+                String html = template.replace("$syllabus$", syllabusJSON).replace("$posts$", postsString)
+                        .replace("$weightScheme$", bm25FSearch.getWeightScheme());
                 BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("hits/hit" + i + ".html"));
                 bufferedWriter.write(html);
                 bufferedWriter.close();
@@ -223,7 +228,7 @@ public class Mturk {
 
         Mturk app = new Mturk();
 
-        //app.createInputFile();
-        app.createSiteCategoryHITs();
+        app.createInputFile();
+        //app.createSiteCategoryHITs();
     }
 }

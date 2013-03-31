@@ -14,7 +14,9 @@ import java.util.ArrayList;
  */
 public class Topic {
     public String mTitle;
-    public ArrayList<Post> mPosts;
+    public ArrayList<Post> mPosts = new ArrayList<Post>();
+    public ArrayList<Topic> mChildren = null;
+    public Topic mParent = null;
 
     public static class Post{
         long id;
@@ -51,12 +53,41 @@ public class Topic {
         }
     }
 
-    public Topic(String title, ArrayList<Post> posts){
+    public Topic(String title, ArrayList<Post> posts, ArrayList<Topic> children){
         mTitle = title;
         mPosts = posts;
+        mChildren = children;
+    }
+
+    public Topic(JSONObject jsonObject, Topic parent){
+        mParent = parent;
+        mTitle = jsonObject.getString("title");
+        JSONArray jsonArray = jsonObject.optJSONArray("children");
+        if(jsonArray != null){
+            mChildren = new ArrayList<Topic>(jsonArray.size());
+            for(int i=0; i<jsonArray.size(); ++i)
+                mChildren.add(new Topic(jsonArray.getJSONObject(i), this));
+        }
     }
 
     public String toString(){
         return mTitle;
+    }
+
+    public boolean hasChildren(){
+        return mChildren != null && mChildren.size() > 0;
+    }
+
+    public String toJSON(){
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("title", mTitle);
+        if(hasChildren()){
+            ArrayList<String> childrenString = new ArrayList<String>(mChildren.size());
+            for(Topic answer : mChildren){
+                childrenString.add(answer.toJSON());
+            }
+            jsonObject.put("children", JSONArray.fromObject(childrenString));
+        }
+        return jsonObject.toString();
     }
 }

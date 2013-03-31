@@ -11,16 +11,22 @@
         .container{max-width: 1024px;width: 100%;}
         .expandable{height: 1.4em;overflow: hidden;cursor: pointer;}
         .expandable.expanded{height: auto;}
-        .syllabus-item .document-list>div{margin-left: 20px;}
+        .syllabus-item .document-list>div, .syllabus-item .children>div{margin-left: 20px;}
+        .syllabus-item .children{margin-bottom: 5px}
         .question{font-size: 18px;margin-bottom: 3px;}
+        .question a{font-size: 14px; font-style: italic;}
         .syllabus-item{border: 1px solid #c0c0c0;padding: 5px;}
-        .placeholder{color: #666;background-color: #cecece;font-style: italic;padding: 3px;}
+        .placeholder{color: #666;background-color: #cecece;font-style: italic;padding: 2px;}
         .document{background-color:#f4f5c5;padding:5px;border:1px solid #caa;border-radius:2px;margin-bottom:5px;max-width: 500px}
         .title a{font-style: italic;}
         .screen{height: 480px;overflow-y: auto}
+        #modal{width: 1024px;margin-left: -512px;}
+        .modal-body {width: 994px}
+        .modal-body .span6{max-height: 400px; overflow-y: auto}
         .modal-body .answers div{margin-bottom: 30px;border-top: 1px solid #ddd;padding: 5px;background: #aacccc;color: #000;}
         .modal-body .answers .accepted{background: #aaffcc}
-        .instructions{margin-top: 5px}
+        .instructions{margin-top: 5px; font-size: 12px}
+        .instructions p{margin:0;}
     </style>
 
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
@@ -29,7 +35,7 @@
     <script type='text/javascript' src='https://s3.amazonaws.com/mturk-public/externalHIT_v1.js'></script>
 
     <script type="text/javascript">
-        var weightScheme = "$weightScheme";
+        var weightScheme = "$weightScheme$";
         var syllabus = $syllabus$;
         var posts = [
             $posts$
@@ -49,14 +55,28 @@
             modal.show();
             return false;
         }
+
+        function showTopicDetails(title, description){
+            var modal = $('#topic-modal');
+            modal.find('.title').html(title);
+            modal.find('.modal-body').html(description);
+            modal.show();
+            return false;
+        }
+
+        function addslashes( str ) {
+            return (str+'').replace(/([\\"'])/g, "\\$1").replace(/\0/g, "\\0");
+        }
     </script>
 
 </head>
 <body>
     <script type="text/template" id="syllabus-item">
         <div class="question">
-            <%- text %>
+            <span class="title"><%- text %></span>
+            <a href="#" onclick="return showTopicDetails('<%- text %>', '<%- description %>')">Show details</a>
         </div>
+        <div class="children"></div>
         <div class="document-list" placeholder="Drag documents here">
             <div class="placeholder">Drag documents here</div>
         </div>
@@ -72,16 +92,34 @@
         <button type="button" class="close" onclick="$('#modal').hide();">&times;</button>
         <h3 class="title">Modal header</h3>
       </div>
-      <div class="modal-body">
-        <div class="body"></div>
-        <br><h4>Answers:</h4>
-        <div class="answers"></div>
+      <div class="modal-body row-fluid">
+        <div class="span6">
+            <h4>Question Body:</h4>
+            <div class="body"></div>
+        </div>
+        <div class="span6">
+            <h4>Answers:</h4>
+            <div class="answers"></div>
+        </div>
       </div>
       <div class="modal-footer"></div>
     </div>
 
+    <div class="modal" id="topic-modal" style="display: none">
+      <div class="modal-header">
+        <button type="button" class="close" onclick="$('#topic-modal').hide();">&times;</button>
+        <h3 class="title">Modal header</h3>
+      </div>
+      <div class="modal-body"></div>
+      <div class="modal-footer"></div>
+    </div>
+
     <div class="container">
-        <div class="row-fluid instructions">Classify the questions from the right column by dragging them into the appropriate slots on the left side. Each questions consists of a title and a body. You can view the body by clicking on the "Show details" link. Also there are several answers provided with each question in the details. No more than one answer marked as accepted (highlighted with green in details window).<br>You can leave a question unclassified if there is not an appropriate topic</div>
+        <div class="row-fluid instructions">
+            <p>- After choosing a question from a list on the right, drag-and-drop it into the most relevant slot in the list on the left. You can skip the question, if there is no proper topic for it in the list.</p>
+            <p>- You can view a question detail page by clicking the "Show details" link. The page will show the question title/body along with related answers. The best answer will be highlighted.</p>
+            <p>- When you're done, submit the results by clicking the "Submit" button.</p>
+        </div>
         <br>
         <div class="row-fluid">
             <div class="span6 screen" id="syllabus"></div>
@@ -99,17 +137,26 @@
 
     <script type="text/javascript">$(function(){
         var template = $('#syllabus-item').html()
-        for(var i=0; i < syllabus.length; ++i){
-            $('<div/>', {class: 'syllabus-item'}).data('i', i).append(
-                template.replace(/<\%\-\s*text\s*\%>/, syllabus[i])
-            ).appendTo('#syllabus')
+
+        function renderSyllabus(syllabus, appendTo){
+            for(var i=syllabus.length - 1; i >= 0 ; --i){
+                var div = $('<div/>', {class: 'syllabus-item'}).data('i', i).append(
+                    template.replace(/<\%\-\s*text\s*\%>/g, addslashes(syllabus[i].title))
+                            .replace(/<\%\-\s*description\s*\%>/g, addslashes(syllabus[i].description))
+                ).prependTo(appendTo)
+                if(syllabus[i].children){
+                    renderSyllabus(syllabus[i].children, div.find('.children'));
+                }
+            }
         }
+
+        renderSyllabus(syllabus, '#syllabus');
 
         template = $('#post-item').html();
         for(var i=0; i < posts.length; ++i){
             $('<div/>', {class: 'document'}).data('id', posts[i].id).append(
-                template.replace(/<\%\-\s*title\s*\%>/, posts[i].title)
-                        .replace(/<\%\-\s*index\s*\%>/, i)
+                template.replace(/<\%\-\s*title\s*\%>/g, posts[i].title)
+                        .replace(/<\%\-\s*index\s*\%>/g, i)
             ).appendTo('#document-list')
         }
 
@@ -119,22 +166,32 @@
                 .children('span').toggleClass('icon-chevron-down').toggleClass('icon-chevron-up')
         })
 
-        $('#mturk_form').submit(function(){
-            var res = []
-            var items = $('.syllabus-item');
+        function collectResult(parentElem){
+            var items = parentElem.children('.syllabus-item');
+            var topics = [];
             for(var i=0; i < items.length; ++i){
                 var item = items.eq(i)
-                res.push({
+                topics.push({
                     i: item.data('i'),
-                    text: item.find('.question').html().trim(),
+                    text: item.children('.question').children('.title').html().trim(),
                     posts: []
                 });
-                var posts = item.find('.document')
+                var posts = item.children('.document-list').children('.document')
                 for(var j=0; j < posts.length; ++j){
-                    res[i].posts.push(posts.eq(j).data('id'))
+                    topics[i].posts.push(posts.eq(j).data('id'))
+                }
+                if(item.children('.children').html().trim().length > 0){
+                    topics[i].children = collectResult(item.children('.children'));
                 }
             }
-            $('#result').val(JSON.stringify({weightScheme: weightScheme, results: res}));
+            return topics;
+        }
+
+        $('#mturk_form').submit(function(){
+            $('#result').val(JSON.stringify({
+                weightScheme: weightScheme,
+                results: collectResult($('#syllabus'))
+            }));
         })
 
         function makeDraggable(selector){
@@ -149,7 +206,7 @@
               hoverClass: "ui-state-hover",
               accept: ":not(.ui-sortable-helper)",
               drop: function( event, ui ) {
-                $(this).find( ".placeholder" ).remove();
+                $(this).children( ".placeholder" ).remove();
                 makeDraggable($( "<div/>", { class: "document" }).data('id', ui.draggable.data('id'))
                     .html(ui.draggable.html()).appendTo(this));
                 var parent = ui.draggable.parent();

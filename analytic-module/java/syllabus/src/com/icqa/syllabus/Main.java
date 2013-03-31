@@ -98,6 +98,8 @@ public class Main {
             bufferedWriter.close();
 
             writer.close();
+
+            System.out.println("Indexed " + docsCount + " documents");
         } catch (Exception e) {
             e.printStackTrace();
         }
