@@ -75,7 +75,6 @@
     <script type="text/template" id="syllabus-item">
         <div class="question">
             <span class="title"><%- text %></span>
-            <a href="#" onclick="return showTopicDetails('<%- text %>', '<%- description %>')">Show details</a>
         </div>
         <div class="document-list" placeholder="Drag documents here">
             <div class="placeholder">Drag documents here</div>
@@ -142,7 +141,6 @@
             for(var i=syllabus.length - 1; i >= 0 ; --i){
                 var div = $('<div/>', {class: 'syllabus-item'}).data('i', i).append(
                     template.replace(/<\%\-\s*text\s*\%>/g, addslashes(syllabus[i].title))
-                            .replace(/<\%\-\s*description\s*\%>/g, addslashes(syllabus[i].description))
                 ).prependTo(appendTo)
                 if(syllabus[i].children){
                     renderSyllabus(syllabus[i].children,

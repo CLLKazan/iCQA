@@ -40,8 +40,8 @@ public class Main {
 
 
     public static void main(String[] args) throws Exception {
-        indexDb();
-        //search();
+        //indexDb();
+        search();
     }
 
     public static Connection getConnection() throws ClassNotFoundException, IllegalAccessException, InstantiationException, SQLException {
@@ -121,18 +121,36 @@ public class Main {
             PreparedStatement selectStatement = connection.prepareStatement("SELECT * FROM forum_node WHERE id=?");
 
             BM25FSearch bm25FSearch = new BM25FSearch(BM_25_F_PARAMETERS);
+            bm25FSearch.setBoosts(new float[]{0.8f, 0.1f, 0.1f});
 
+            System.out.println("a=[");
             for(String line : getSyllabus()){
-                System.out.println("\t" + line);
-                long[] docIds = bm25FSearch.getTopN(line, 5);
+                //System.out.println("\t" + line);
+                long[] docIds = bm25FSearch.getTopN(line, 10);
                 for(long id : docIds){
                     selectStatement.setLong(1, id);
                     selectStatement.execute();
                     ResultSet resultSet = selectStatement.getResultSet();
                     if(resultSet.next())
-                        System.out.println(id + "\t" + resultSet.getString("title"));
+                        System.out.println(id + ",");
                 }
+
             }
+            System.out.println("];b=[");
+            bm25FSearch.setBoosts(new float[]{0.0f, 0.6f, 0.5f});
+            for(String line : getSyllabus()){
+                //System.out.println("\t" + line);
+                long[] docIds = bm25FSearch.getTopN(line, 10);
+                for(long id : docIds){
+                    selectStatement.setLong(1, id);
+                    selectStatement.execute();
+                    ResultSet resultSet = selectStatement.getResultSet();
+                    if(resultSet.next())
+                        System.out.println(id + ",");
+                }
+
+            }
+            System.out.println("];for(var i=1;i<100;++i) document.getElementsByName('B'+(i<10?'0':'') +i)[0].value = b[i];for(var i=1;i<100;++i) document.getElementsByName('A'+(i<10?'0':'') +i)[0].value = a[i];");
         }catch(Exception e){
             e.printStackTrace();
         }

@@ -74,6 +74,12 @@ public class Topic {
         return mTitle;
     }
 
+    public String getQuery() {
+        if(mParent == null)
+            return mTitle;
+        return mParent.getQuery() + ", " + mTitle;
+    }
+
     public boolean hasChildren(){
         return mChildren != null && mChildren.size() > 0;
     }

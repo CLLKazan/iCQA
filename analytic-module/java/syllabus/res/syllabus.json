@@ -1,88 +1,367 @@
 [
-    {
-        "title": "Java Hello World Program",
-        "description": "Description not Available",
-    },
-    {
-        "title": "Java Data and Variables",
-        "description": "Description not Available",
-        "children": [
-            {
-                "title": "Data",
-                "description": "Description' not Available",
-            },
-            {
-                "title": "Variables",
-                "description": "Description not Available",
-            }
-        ]
-    },
-    {
-        "title": "Java Command Line Arguments",
-        "description": "Description not Available",
-    },
-    {
-        "title": "Java Arithmetic Operators",
-        "description": "Description not Available",
-    },
-    {
-        "title": "Java Assignment Operators",
-        "description": "Description not Available",
-    },
-    {
-        "title": "Java Increment and Decrement Operators",
-        "description": "Description not Available",
-    },
-    {
-        "title": "Java Relational Operators",
-        "description": "Description not Available",
-    },
-    {
-        "title": "Java Boolean Operators",
-        "description": "Description not Available",
-    },
-    {
-        "title": "Java Conditional Operators",
-        "description": "Description not Available",
-    },
-    {
-        "title": "Java If-else Statement",
-        "description": "Description not Available",
-    },
-    {
-        "title": "Java Loops (while, do-while and  for loops)",
-        "description": "Description not Available",
-    },
-    {
-        "title": "Java Arithmetic expressions",
-        "description": "Description not Available",
-    },
-    {
-        "title": "Methods",
-        "description": "Description not Available",
-    },
-    {
-        "title": "Arrays",
-        "description": "Description not Available",
-    },
-    {
-        "title": "Classes and Objects",
-        "description": "Description not Available",
-    },
-    {
-        "title": "Interfaces",
-        "description": "Description not Available",
-    },
-    {
-        "title": "Catching Exceptions",
-        "description": "Description not Available",
-    },
-    {
-        "title": "File I/O and Streams",
-        "description": "Description not Available",
-    },
-    {
-        "title": "How to make executable jar files in JDK",
-        "description": "Description not Available",
-    }
+ {
+  "children": [
+   {
+    "title": "The Java Virtual Machine"
+   },
+   {
+    "title": "Writing a Java Program"
+   },
+   {
+    "title": "Packages"
+   },
+   {
+    "title": "Simple Java Programs"
+   }
+  ],
+  "title": "Introduction"
+ },
+ {
+  "children": [
+   {
+    "title": "Primitive Data Types"
+   },
+   {
+    "title": "Comments"
+   },
+   {
+    "title": "The for Statement"
+   },
+   {
+    "title": "The if Statement"
+   },
+   {
+    "title": "The while and do while Statements"
+   },
+   {
+    "title": "The switch Statement"
+   },
+   {
+    "title": "The break Statement"
+   },
+   {
+    "title": "The continue Statement"
+   },
+   {
+    "title": "Operators"
+   },
+   {
+    "title": "Casts and Conversions"
+   },
+   {
+    "title": "Keywords"
+   }
+  ],
+  "title": "Language Components"
+ },
+ {
+  "children": [
+   {
+    "title": "Defining New Data Types"
+   },
+   {
+    "title": "Constructors"
+   },
+   {
+    "title": "The String Class"
+   },
+   {
+    "title": "String Literals"
+   },
+   {
+    "title": "Documentation"
+   },
+   {
+    "title": "Packages"
+   },
+   {
+    "title": "The StringBuffer Class"
+   },
+   {
+    "title": "Naming Conventions"
+   },
+   {
+    "title": "The Date Class"
+   },
+   {
+    "title": "The import Statement"
+   },
+   {
+    "title": "Deprecation"
+   },
+   {
+    "title": "The StringTokenizer Class"
+   },
+   {
+    "title": "The DecimalFormat Class"
+   }
+  ],
+  "title": "Object-Oriented Programming"
+ },
+ {
+  "children": [
+   {
+    "title": "Method Signatures"
+   },
+   {
+    "title": "Arguments and Parameters"
+   },
+   {
+    "title": "Passing Objects to Methods"
+   },
+   {
+    "title": "Method Overloading"
+   },
+   {
+    "title": "Static Methods"
+   },
+   {
+    "title": "The Math Class"
+   },
+   {
+    "title": "The System Class"
+   },
+   {
+    "title": "Wrapper Classes"
+   }
+  ],
+  "title": "Methods"
+ },
+ {
+  "children": [
+   {
+    "title": "Processing Arrays"
+   },
+   {
+    "title": "Copying Arrays"
+   },
+   {
+    "title": "Passing Arrays to Methods"
+   },
+   {
+    "title": "Arrays of Objects"
+   },
+   {
+    "title": "The Arrays Class"
+   },
+   {
+    "title": "Command Line Arguments"
+   },
+   {
+    "title": "Multidimensional Arrays"
+   }
+  ],
+  "title": "Arrays"
+ },
+ {
+  "children": [
+   {
+    "title": "Constructors"
+   },
+   {
+    "title": "The this Reference"
+   },
+   {
+    "title": "Data Hiding"
+   },
+   {
+    "title": "public and private Members"
+   },
+   {
+    "title": "Access Levels"
+   },
+   {
+    "title": "Composition"
+   },
+   {
+    "title": "Static Data Members"
+   }
+  ],
+  "title": "Encapsulation"
+ },
+ {
+  "children": [
+   {
+    "title": "The Object Class"
+   },
+   {
+    "title": "Method Overriding"
+   },
+   {
+    "title": "Polymorphism"
+   },
+   {
+    "title": "Additional Inheritance Examples"
+   },
+   {
+    "title": "Inheritance Issues"
+   }
+  ],
+  "title": "Inheritance & Polymorphism"
+ },
+ {
+  "children": [
+   {
+    "title": "Abstract Classes"
+   },
+   {
+    "title": "Abstract Class Example"
+   },
+   {
+    "title": "Extending an Abstract Class"
+   },
+   {
+    "title": "Interfaces"
+   }
+  ],
+  "title": "Abstract Classes and Interfaces"
+ },
+ {
+  "children": [
+   {
+    "title": "Exception Handling"
+   },
+   {
+    "title": "The Exception Hierarchy"
+   },
+   {
+    "title": "Checked Exceptions"
+   },
+   {
+    "title": "Advertising Exceptions with throws"
+   },
+   {
+    "title": "Developing Your Own Exception Classes"
+   },
+   {
+    "title": "The finally Block"
+   }
+  ],
+  "title": "Exceptions"
+ },
+ {
+  "children": [
+   {
+    "title": "The File Class"
+   },
+   {
+    "title": "Standard Streams"
+   },
+   {
+    "title": "Keyboard Input"
+   },
+   {
+    "title": "File IO Using Byte Streams"
+   },
+   {
+    "title": "Character Streams"
+   },
+   {
+    "title": "File IO Using Character Streams"
+   },
+   {
+    "title": "Buffered Streams"
+   },
+   {
+    "title": "File IO Using a Buffered Stream"
+   },
+   {
+    "title": "Keyboard Input Using a Buffered Stream"
+   },
+   {
+    "title": "Writing Text Files"
+   }
+  ],
+  "title": "Input and Output in Java"
+ },
+ {
+  "children": [
+   {
+    "title": "Threads vs. Processes"
+   },
+   {
+    "title": "Creating Threads by Extending Thread"
+   },
+   {
+    "title": "Creating Threads by Implementing Runnable"
+   },
+   {
+    "title": "Advantages of Using Threads"
+   },
+   {
+    "title": "Daemon Threads"
+   },
+   {
+    "title": "Thread States"
+   },
+   {
+    "title": "Thread Problems"
+   },
+   {
+    "title": "Synchronization"
+   }
+  ],
+  "title": "Threads"
+ },
+ {
+  "children": [
+   {
+    "title": "Vectors"
+   },
+   {
+    "title": "Hashtables"
+   },
+   {
+    "title": "Enumerations"
+   },
+   {
+    "title": "Properties"
+   },
+   {
+    "title": "Collection Framework Hierarchy"
+   },
+   {
+    "title": "Lists"
+   },
+   {
+    "title": "Sets"
+   },
+   {
+    "title": "Maps"
+   },
+   {
+    "title": "The Collections Class"
+   }
+  ],
+  "title": "Collections"
+ },
+ {
+  "children": [
+   {
+    "title": "Networking Fundamentals"
+   },
+   {
+    "title": "The Client Server Model"
+   },
+   {
+    "title": "InetAddress"
+   },
+   {
+    "title": "URLs"
+   },
+   {
+    "title": "Sockets"
+   },
+   {
+    "title": "A Time-of-Day Client"
+   },
+   {
+    "title": "Writing Servers"
+   },
+   {
+    "title": "Client Server Example"
+   }
+  ],
+  "title": "Networking"
+ }
 ]

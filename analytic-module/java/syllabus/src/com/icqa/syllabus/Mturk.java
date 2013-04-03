@@ -7,6 +7,7 @@ import com.amazonaws.mturk.service.axis.RequesterService;
 import com.amazonaws.mturk.util.PropertiesClientConfig;
 import net.sf.json.JSONArray;
 import org.apache.commons.lang.StringUtils;
+import org.apache.lucene.queryParser.ParseException;
 
 import java.io.*;
 import java.sql.Connection;
@@ -22,8 +23,10 @@ import java.util.Random;
 public class Mturk {
 
     public static final int POSTS_PER_TOPIC = 2;
-    public static final int HITS_COUNT = 2;
-    public static final int TOP_N = 10;
+    public static final int TOP_N = 50;
+    public static final int HITS_COUNT = 25;
+
+    public static int СURRENT_ID = 0;
     // Defining the locations of the input files
     private RequesterService service;
     private static String inputFile = "res/mturk.input";
@@ -106,9 +109,6 @@ public class Mturk {
     }
 
 
-    Random random = new Random();
-
-
     public ArrayList<Topic> getTopics(ArrayList<Topic> allTopics){
         ArrayList<Topic> result = new ArrayList<Topic>();
         for(Topic topic : allTopics){
@@ -121,14 +121,14 @@ public class Mturk {
         return result;
     }
 
-    public String pickPosts(ArrayList<Topic> topics){
+    public String pickPosts(ArrayList<Topic> topics, int pos){
 
         ArrayList<String> posts = new ArrayList<String>();
 
         for(Topic item : topics){
-            for(int i=0; item.mPosts.size() > 0 && i < POSTS_PER_TOPIC; ++i){
-                int idx = random.nextInt(item.mPosts.size());
-                posts.add(item.mPosts.remove(idx).toJSON());
+            for(int i=0; i < POSTS_PER_TOPIC; ++i){
+                if(i + pos * POSTS_PER_TOPIC < item.mPosts.size())
+                    posts.add(item.mPosts.get(i + pos * POSTS_PER_TOPIC).toJSON());
             }
         }
 
@@ -188,40 +188,49 @@ public class Mturk {
             Connection connection = Main.getConnection();
 
             BM25FSearch bm25FSearch = new BM25FSearch(Main.BM_25_F_PARAMETERS);
-            bm25FSearch.setBoosts(new float[]{0.6f, 0.3f, 0.1f});
+
+            BufferedWriter inputFileWriter = new BufferedWriter(new FileWriter(inputFile));
+            inputFileWriter.write("id\n");
 
 
             String syllabusJSON = readFile("res/syllabus.json");
             ArrayList<Topic> syllabus = loadSyllabus(syllabusJSON);
             ArrayList<Topic> topics = getTopics(syllabus);
 
-            for(Topic topic : topics){
-                long[] docIds = bm25FSearch.getTopN(topic.mTitle, TOP_N);
-
-                for(long id : docIds){
-                    Topic.Post post = getPost(id, connection);
-                    if(post != null){
-                        topic.mPosts.add(post);
-                    }
-                }
-            }
-
-            BufferedWriter inputFileWriter = new BufferedWriter(new FileWriter(inputFile));
-            inputFileWriter.write("id\n");
-            for(int i=0; i < HITS_COUNT; ++i){
-                inputFileWriter.write(i + "\n");
-
-                String postsString = pickPosts(topics);
-                String html = template.replace("$syllabus$", syllabusJSON).replace("$posts$", postsString)
-                        .replace("$weightScheme$", bm25FSearch.getWeightScheme());
-                BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("hits/hit" + i + ".html"));
-                bufferedWriter.write(html);
-                bufferedWriter.close();
-            }
+            handleWeight(new float[]{0.6f, 0.3f, 0.1f}, template, connection, bm25FSearch, inputFileWriter, syllabusJSON, topics);
+            handleWeight(new float[]{1.0f, 0.0f, 0.0f}, template, connection, bm25FSearch, inputFileWriter, syllabusJSON, topics);
             inputFileWriter.close();
         }catch (Exception e){
             e.printStackTrace();
         }
+    }
+
+    private void handleWeight(float[] boosts, String template, Connection connection, BM25FSearch bm25FSearch, BufferedWriter inputFileWriter, String syllabusJSON, ArrayList<Topic> topics) throws IOException, ParseException, SQLException {
+        bm25FSearch.setBoosts(boosts);
+
+        for(Topic topic : topics){
+            long[] docIds = bm25FSearch.getTopN(topic.getQuery(), TOP_N);
+
+            for(long id : docIds){
+                Topic.Post post = getPost(id, connection);
+                if(post != null){
+                    topic.mPosts.add(post);
+                }
+            }
+        }
+
+
+        for(int i=СURRENT_ID; i < СURRENT_ID + HITS_COUNT; ++i){
+            inputFileWriter.write(i + "\n");
+
+            String postsString = pickPosts(topics, i);
+            String html = template.replace("$syllabus$", syllabusJSON).replace("$posts$", postsString)
+                    .replace("$weightScheme$", bm25FSearch.getWeightScheme());
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("hits/hit" + i + ".html"));
+            bufferedWriter.write(html);
+            bufferedWriter.close();
+        }
+        СURRENT_ID += HITS_COUNT;
     }
 
     public static void main(String[] args) {
