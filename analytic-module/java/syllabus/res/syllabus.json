@@ -2,23 +2,6 @@
  {
   "children": [
    {
-    "title": "The Java Virtual Machine"
-   },
-   {
-    "title": "Writing a Java Program"
-   },
-   {
-    "title": "Packages"
-   },
-   {
-    "title": "Simple Java Programs"
-   }
-  ],
-  "title": "Introduction"
- },
- {
-  "children": [
-   {
     "title": "Primitive Data Types"
    },
    {
@@ -191,9 +174,6 @@
     "title": "Polymorphism"
    },
    {
-    "title": "Additional Inheritance Examples"
-   },
-   {
     "title": "Inheritance Issues"
    }
   ],
@@ -228,7 +208,7 @@
     "title": "Checked Exceptions"
    },
    {
-    "title": "Advertising Exceptions with throws"
+    "title": "Raising Exceptions with throws"
    },
    {
     "title": "Developing Your Own Exception Classes"
@@ -344,22 +324,13 @@
     "title": "The Client Server Model"
    },
    {
-    "title": "InetAddress"
-   },
-   {
     "title": "URLs"
    },
    {
     "title": "Sockets"
    },
    {
-    "title": "A Time-of-Day Client"
-   },
-   {
     "title": "Writing Servers"
-   },
-   {
-    "title": "Client Server Example"
    }
   ],
   "title": "Networking"

@@ -207,8 +207,15 @@
               accept: ":not(.ui-sortable-helper)",
               drop: function( event, ui ) {
                 $(this).children( ".placeholder" ).remove();
-                makeDraggable($( "<div/>", { class: "document" }).data('id', ui.draggable.data('id'))
-                    .html(ui.draggable.html()).appendTo(this));
+                var children = $(this).children();
+                for(var i=0; i<children.length && children.eq(i).offset().top < ui.draggable.offset().top; ++i);
+                var item = $( "<div/>", { class: "document" }).data('id', ui.draggable.data('id')).html(ui.draggable.html());
+                makeDraggable(item);
+                if(i < children.length){
+                    item.insertAfter(children.eq(i));
+                }else{
+                    item.appendTo($(this));
+                }
                 var parent = ui.draggable.parent();
                 ui.draggable.remove();
                 if(parent.children().length == 0)

@@ -14,17 +14,15 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Random;
+import java.util.*;
 
 
 public class Mturk {
 
     public static final int POSTS_PER_TOPIC = 2;
-    public static final int TOP_N = 50;
+    public static final int TOP_N = 5;
     public static final int HITS_COUNT = 25;
+    public static final int POSTS_PER_HIT = 52;
 
     public static int СURRENT_ID = 0;
     // Defining the locations of the input files
@@ -208,36 +206,60 @@ public class Mturk {
     private void handleWeight(float[] boosts, String template, Connection connection, BM25FSearch bm25FSearch, BufferedWriter inputFileWriter, String syllabusJSON, ArrayList<Topic> topics) throws IOException, ParseException, SQLException {
         bm25FSearch.setBoosts(boosts);
 
-        for(Topic topic : topics){
-            long[] docIds = bm25FSearch.getTopN(topic.getQuery(), TOP_N);
+        ArrayList<Topic.Post> heap = new ArrayList<Topic.Post>(TOP_N * topics.size());
 
+        Set<Long> usedPosts = new HashSet<Long>();
+
+        for(Topic topic : topics){
+            long[] docIds = bm25FSearch.getTopN(topic.getQuery(), TOP_N + 40);
+
+            int addedCount = 0;
             for(long id : docIds){
+                if(usedPosts.contains(id)) continue;
                 Topic.Post post = getPost(id, connection);
                 if(post != null){
-                    topic.mPosts.add(post);
+                    usedPosts.add(id);
+                    heap.add(post);
+                    addedCount += 1;
                 }
+                if(addedCount == TOP_N)
+                    break;
             }
         }
 
+        int hitsCount = heap.size() / POSTS_PER_HIT + (heap.size() % POSTS_PER_HIT != 0 ? 1 : 0);
 
-        for(int i=СURRENT_ID; i < СURRENT_ID + HITS_COUNT; ++i){
-            inputFileWriter.write(i + "\n");
 
-            String postsString = pickPosts(topics, i);
+        for(int i=0; i < hitsCount; ++i){
+            inputFileWriter.write((СURRENT_ID + i) + "\n");
+
+            List posts = heap.subList(i * POSTS_PER_HIT, Math.min((i + 1) * POSTS_PER_HIT, heap.size()));
+
+            StringBuilder postsStringBuilder = new StringBuilder();
+            for(int j=0; j<posts.size(); ++j){
+                Topic.Post post = (Topic.Post)posts.get(j);
+                postsStringBuilder.append(post.toJSON());
+                if(j != posts.size() - 1)
+                    postsStringBuilder.append(",");
+            }
+
+            System.out.println(posts.size() + " questions added to HIT #" + (СURRENT_ID + i));
+
+            String postsString = postsStringBuilder.toString();
             String html = template.replace("$syllabus$", syllabusJSON).replace("$posts$", postsString)
                     .replace("$weightScheme$", bm25FSearch.getWeightScheme());
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("hits/hit" + i + ".html"));
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("hits/hit" + (СURRENT_ID + i) + ".html"));
             bufferedWriter.write(html);
             bufferedWriter.close();
         }
-        СURRENT_ID += HITS_COUNT;
+        СURRENT_ID += hitsCount;
     }
 
     public static void main(String[] args) {
 
         Mturk app = new Mturk();
 
-        app.createInputFile();
-        //app.createSiteCategoryHITs();
+        //app.createInputFile();
+        app.createSiteCategoryHITs();
     }
 }
