@@ -91,21 +91,26 @@ class PostsConverter():
                     "(name TEXT, used_count INT, PRIMARY KEY(name ASC))")
         cur.execute("CREATE TABLE IF NOT EXISTS revisions (data TEXT)")
 
-
     def get_state(self, post):
-        return ('(wiki)' if post.get('CommunityOwnedDate') else '') + \
-               ('(accepted)' if post.get('AcceptedAnswerId') else '')
+        # TODO: add states to `forum_nodestate` and create actions
+        if post.get('AcceptedAnswerId'):
+            self.accepted_answers[post.get('AcceptedAnswerId')] = post['Id']
+        accepted_state = ''
+        if post['Id'] in self.accepted_answers:
+            accepted_state = '(accepted)'
+            del self.accepted_answers[post['Id']]
+        return accepted_state + ('(wiki)' if post.get('CommunityOwnedDate') else '')
 
     def readTagnames(self, ts, postid):
         if not ts: return ''
         tagnames = ts.replace(u'ö', '-').replace(u'é', '').replace(u'à', '')\
-          .replace('><', ' ').replace('>', '').replace('<', '')
+                     .replace('><', ' ').replace('>', '').replace('<', '')
 
         cur = self.con.cursor()
         for name in tagnames.split(' '):
             cur.execute("SELECT rowid, name, used_count FROM tags WHERE name=?", (name,))
             otag = cur.fetchone()
-            if otag == None:
+            if otag is None:
                 cur.execute("INSERT INTO tags VALUES(?,?)", (name, 1))
                 self.nodetags.append((postid, cur.lastrowid))
             else:
@@ -153,6 +158,10 @@ class PostsConverter():
 
         writew(f, revisions_header, cur.execute("SELECT data FROM revisions"), lambda x: x[0])
         f.write(";\n")
+
+        for post_id in self.accepted_answers:
+            f.write("UPDATE forum_node SET state_string=CONCAT(state_string, '(accepted)') WHERE id=%s;\n" % post_id)
+
         f.close()
 
     def convert(self, context, files_count):
