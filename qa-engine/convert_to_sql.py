@@ -128,7 +128,7 @@ class PostsConverter():
                      .replace('><', ' ').replace('>', '').replace('<', '')
 
         cur = self.con.cursor()
-        for name in tagnames.split(' '):
+        for name in set(tagnames.split(' ')):
             cur.execute("SELECT rowid, name, used_count FROM tags WHERE name=?", (name,))
             otag = cur.fetchone()
             if otag is None:
@@ -192,6 +192,7 @@ class PostsConverter():
         f.write(";\n")
 
         for post_id in self.accepted_answers:
+            print post_id
             f.write("UPDATE forum_node SET state_string=CONCAT(state_string, '(accepted)') WHERE id=%d;\n" % self.postsmap[int(post_id)])
 
         for post_id, parent_id in self.parent_is_not_available.iteritems():
@@ -234,7 +235,7 @@ class UsersConverter():
             (user_ptr_id, last_seen, about, website,
                 reputation, gold, silver, bronze, real_name, location)
             VALUES """
-    usernames = {}
+    usernames = set()
     existing_users = {}  # {email: id}
     usermap = {}
     last_user_id = 0
@@ -243,10 +244,11 @@ class UsersConverter():
         con = MySQLdb.connect('localhost', OSQA_DB_USERNAME, OSQA_DB_PASSWORD, OSQA_DB_NAME)
         with con:
             cur = con.cursor()
-            cur.execute("SELECT id, email FROM auth_user")
+            cur.execute("SELECT id, email, username FROM auth_user")
             user_emails = cur.fetchall()
             for row in user_emails:
                 self.existing_users[row[1]] = row[0]
+                self.usernames.add(row[2])
 
             if len(user_emails) > 0:
                 self.last_user_id = max(user_emails, key=lambda x: x[0])[0] + 1
@@ -266,7 +268,7 @@ class UsersConverter():
         name = escape(obj['DisplayName'].strip())
         if name in self.usernames:
             name = name + obj['Id']
-        self.usernames[name] = True
+        self.usernames.add(name)
         return u"(%d, '%s', '%s', '!', 1, '%s')" % (
                self.current_id, name, obj['EmailHash'],
                readTime(obj.get('DateJoined')),
