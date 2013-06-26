@@ -25,6 +25,12 @@ def escape(string):
     return smart_unicode(MySQLdb.escape_string(smart_str(string)))
 
 
+def get_last_id(cursor, table_name):
+    cursor.execute("SELECT MAX(id) FROM %s" % table_name)
+    row = cursor.fetchone()
+    return row[0] if row[0] else 0
+
+
 def readTime(ts):
     if not ts: return ''
     noms = msstrip.match(ts)
@@ -41,19 +47,19 @@ def getFilePath(name):
     return os.path.join(root_dir, name)
 
 
-def writew(f, header, itervalues, func, check=lambda x: True):
-    counter = 0
-    for item in itervalues:
+def writew(f, header, itervalues, func, check=lambda x: True, on_duplicate=None):
+    tail = "" if on_duplicate is None else "ON DUPLICATE KEY UPDATE %s" % on_duplicate
+    for counter, item in enumerate(itervalues):
         if not check(item):
             continue
 
         if counter % MAX_VALUES == 0:
-            f.write(u';\n' + header.encode('utf-8'))
+            f.write((u'' if counter == 0 else tail + u';\n') + header.encode('utf-8'))
             values = func(item)
         else:
             values = u',\n' + func(item)
         f.write(values.encode('utf-8'))
-        counter += 1
+    f.write(";\n")
 
 
 class Writer():
@@ -95,22 +101,25 @@ class PostsConverter():
     def __init__(self, usermap):
         self.usermap = usermap
 
-        self.con = sqlite3.connect("/media/DATA/sqlite.db")
+        self.con = sqlite3.connect("/tmp/sqlite.db")
         cur = self.con.cursor()
         cur.execute("CREATE TABLE IF NOT EXISTS tags " +
-                    "(name TEXT, used_count INT, PRIMARY KEY(name ASC))")
+                    "(id INT, name TEXT UNIQUE, used_count INT, updated INT, PRIMARY KEY(id ASC))")
         cur.execute("CREATE TABLE IF NOT EXISTS revisions (data TEXT)")
 
         con = MySQLdb.connect('localhost', OSQA_DB_USERNAME, OSQA_DB_PASSWORD, OSQA_DB_NAME)
         with con:
             cur = con.cursor()
-            cur.execute("SELECT MAX(id) FROM forum_node")
-            row = cur.fetchone()
-            self.current_post_id = row[0] if row[0] else 0
+            self.current_post_id = get_last_id(cur, "forum_node")
+            self.revision_id = get_last_id(cur, "forum_noderevision")
+            self.tag_id = get_last_id(cur, "forum_tag")
 
-            cur.execute("SELECT MAX(id) FROM forum_noderevision")
-            row = cur.fetchone()
-            self.revision_id = row[0] if row[0] else 0
+            cur.execute("SELECT id, name, used_count FROM forum_tag")
+            rows = cur.fetchall()
+            sqlite_cursor = self.con.cursor()
+            for row in rows:
+                sqlite_cursor.execute("INSERT INTO tags VALUES (?, ?, ?, 0)", row)
+
 
     def get_state(self, post):
         # TODO: add states to `forum_nodestate` and create actions
@@ -129,13 +138,14 @@ class PostsConverter():
 
         cur = self.con.cursor()
         for name in set(tagnames.split(' ')):
-            cur.execute("SELECT rowid, name, used_count FROM tags WHERE name=?", (name,))
+            cur.execute("SELECT id, name, used_count FROM tags WHERE name=?", (name,))
             otag = cur.fetchone()
             if otag is None:
-                cur.execute("INSERT INTO tags VALUES(?,?)", (name, 1))
-                self.nodetags.append((self.current_post_id, cur.lastrowid))
+                self.tag_id += 1
+                cur.execute("INSERT INTO tags VALUES(?,?,?,1)", (self.tag_id, name, 1))
+                self.nodetags.append((self.current_post_id, self.tag_id))
             else:
-                cur.execute("UPDATE tags SET used_count=used_count+1 WHERE rowid=?", (otag[0],))
+                cur.execute("UPDATE tags SET used_count=used_count+1, updated=1 WHERE id=?", (otag[0],))
                 self.nodetags.append((self.current_post_id, otag[0]))
 
         return tagnames
@@ -179,8 +189,9 @@ class PostsConverter():
         f = open(getFilePath("posts-misc.sql"), "w")
         cur = self.con.cursor()
 
-        writew(f, tags_header, cur.execute("SELECT rowid, name, used_count FROM tags"),
-               lambda x: u"(%s, '%s',%s,'%s',%s)" % (x[0], escape(x[1]), 1, now, x[2]) )
+        writew(f, tags_header, cur.execute("SELECT id, name, used_count FROM tags WHERE updated=1"),
+               lambda x: u"(%s, '%s',%s,'%s',%s)" % (x[0], escape(x[1]), 1, now, x[2]),
+               on_duplicate="used_count=VALUES(used_count)")
 
         nodetags_header = u"INSERT INTO forum_node_tags(node_id,tag_id) VALUES "
         writew(f, nodetags_header, self.nodetags, lambda x: u"(%s,%s)" % x)
@@ -189,14 +200,14 @@ class PostsConverter():
                 summary, revision, revised_at) VALUES """
 
         writew(f, revisions_header, cur.execute("SELECT data FROM revisions"), lambda x: x[0])
-        f.write(";\n")
 
         for post_id in self.accepted_answers:
-            print post_id
-            f.write("UPDATE forum_node SET state_string=CONCAT(state_string, '(accepted)') WHERE id=%d;\n" % self.postsmap[int(post_id)])
+            if long(post_id) in self.postsmap:
+                f.write("UPDATE forum_node SET state_string=CONCAT(state_string, '(accepted)') WHERE id=%d;\n" % self.postsmap[long(post_id)])
 
         for post_id, parent_id in self.parent_is_not_available.iteritems():
-            f.write("UPDATE forum_node SET parent_id=%d WHERE id=%d;\n" % (self.postsmap[parent_id], post_id))
+            if parent_id in self.postsmap:
+                f.write("UPDATE forum_node SET parent_id=%d WHERE id=%d;\n" % (self.postsmap[parent_id], post_id))
 
         f.close()
 
@@ -271,7 +282,7 @@ class UsersConverter():
         self.usernames.add(name)
         return u"(%d, '%s', '%s', '!', 1, '%s')" % (
                self.current_id, name, obj['EmailHash'],
-               readTime(obj.get('DateJoined')),
+               readTime(obj.get('CreationDate')),
         )
 
     def processUserId(self, obj):
@@ -342,10 +353,7 @@ class VotesConverter():
 
         con = MySQLdb.connect('localhost', OSQA_DB_USERNAME, OSQA_DB_PASSWORD, OSQA_DB_NAME)
         with con:
-            cur = con.cursor()
-            cur.execute("SELECT MAX(id) FROM forum_action")
-            row = cur.fetchone()
-            self.action_id = row[0] + 1 if row[0] else 1
+            self.action_id = get_last_id(con.cursor(), "forum_action")
 
     def get_action(self, code):
         return code in self.actions and self.actions[code] or "unknown"
@@ -375,14 +383,14 @@ class VotesConverter():
         counter = 0
         mod = MAX_VALUES * files_count
         for event, elem in context:
+            values_vote, values_action = self.make_sql(elem.attrib)
+            if values_vote is None:
+                continue
+
             if counter % mod == 0:
                 writer_vote.write(u';\n' + self.vote_header, True)
                 writer_action.write(u';\n' + self.action_header, True)
 
-            values_vote, values_action = self.make_sql(elem.attrib)
-
-            if values_vote is None:
-                continue
             if counter % mod < files_count:
                 writer_vote.write(values_vote.encode('utf-8'))
                 writer_action.write(values_action.encode('utf-8'))
