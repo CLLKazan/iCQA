@@ -6,6 +6,7 @@ GetAnswers <- function(db.channel) {
   #
   # Returns:
   #   Frame, containing answer data
+  #
   require(RMySQL)
   results <- 
     dbSendQuery(db.channel,
